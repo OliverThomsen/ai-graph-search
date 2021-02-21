@@ -8,7 +8,7 @@ public class GraphSearch {
 
     public static Action[][] search(State initialState, Frontier frontier)
     {
-        boolean outputFixedSolution = true;
+        boolean outputFixedSolution = false;
 
         if (outputFixedSolution) {
             //Part 1:
@@ -50,17 +50,47 @@ public class GraphSearch {
 
             int iterations = 0;
 
+            // initialize the frontier using the initial state of problem
             frontier.add(initialState);
+            // initialize the explored set to be empty
             HashSet<State> explored = new HashSet<>();
 
             while (true) {
-
                 //Print a status message every 10000 iteration
                 if (++iterations % 10000 == 0) {
                     printSearchStatus(explored, frontier);
                 }
 
-                //Your code here...
+                // if the frontier is empty then return failure
+                if (frontier.isEmpty()) {
+                    return null;
+                }
+
+                // choose a leaf node and remove it from the frontier
+                // pop returns all leaf nodes from the frontier
+                State currentState = frontier.pop();
+
+                // if the node contains a goal state then return the corresponding solution
+                // isGoalState runs through all leif nodes in the current state
+                // to see if any of the nodes contain the goal
+                if (currentState.isGoalState()) {
+                    printSearchStatus(explored,frontier);
+                    return currentState.extractPlan();
+                }
+
+                // add the node to the explored set
+                // this adds all the leif nodes the explored set
+                explored.add(currentState);
+
+                // expand the chosen node, adding the resulting nodes to the frontier
+                // This expands all leif nodes, and for each node
+                // their corresponding new state is added to the frontier of not already explored
+                for (State state : currentState.getExpandedStates()) {
+                    // only if not in the frontier or explored set
+                    if (!frontier.contains(state) && !explored.contains(state)) {
+                        frontier.add(state);
+                    }
+                }
             }
         }
     }
