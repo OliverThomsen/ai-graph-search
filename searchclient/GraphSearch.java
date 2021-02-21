@@ -15,10 +15,21 @@ public class GraphSearch {
             //The agents will perform the sequence of actions returned by this method.
             //Try to solve a few levels by hand, enter the found solutions below, and run them:
 
+            // Solves MAPF00.lvl
             return new Action[][] {
                 {Action.MoveS},
                 {Action.MoveE},
                 {Action.MoveE},
+                {Action.MoveS},
+                {Action.MoveE},
+                {Action.MoveE},
+                {Action.MoveE},
+                {Action.MoveE},
+                {Action.MoveE},
+                {Action.MoveE},
+                {Action.MoveE},
+                {Action.MoveE},
+                {Action.MoveS},
                 {Action.MoveS},
             };
         } else {
