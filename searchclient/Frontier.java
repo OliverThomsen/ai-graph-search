@@ -13,8 +13,7 @@ public interface Frontier
     String getName();
 }
 
-class FrontierBFS
-        implements Frontier
+class FrontierBFS implements Frontier
 {
     private final ArrayDeque<State> queue = new ArrayDeque<>(65536);
     private final HashSet<State> set = new HashSet<>(65536);
@@ -59,37 +58,42 @@ class FrontierBFS
     }
 }
 
-class FrontierDFS
-        implements Frontier
+class FrontierDFS implements Frontier
 {
+    private final ArrayDeque<State> queue = new ArrayDeque<>(65536);
+    private final HashSet<State> set = new HashSet<>(65536);
+
     @Override
     public void add(State state)
     {
-        throw new NotImplementedException();
+        this.queue.addFirst(state);
+        this.set.add(state);
     }
 
     @Override
     public State pop()
     {
-        throw new NotImplementedException();
+        State state = this.queue.pollFirst();
+        this.set.remove(state);
+        return state;
     }
 
     @Override
     public boolean isEmpty()
     {
-        throw new NotImplementedException();
+        return this.queue.isEmpty();
     }
 
     @Override
     public int size()
     {
-        throw new NotImplementedException();
+        return this.queue.size();
     }
 
     @Override
     public boolean contains(State state)
     {
-        throw new NotImplementedException();
+        return this.set.contains(state);
     }
 
     @Override
