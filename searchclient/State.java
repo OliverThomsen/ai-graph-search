@@ -98,6 +98,19 @@ public class State
                     this.agentRows[agent] += action.agentRowDelta;
                     this.agentCols[agent] += action.agentColDelta;
                     break;
+
+                // Push and Pull
+                default:
+                    this.agentRows[agent] += action.agentRowDelta;
+                    this.agentCols[agent] += action.agentColDelta;
+                    int prevBoxRow = this.agentRows[agent];
+                    int prevBoxCol = this.agentCols[agent];
+                    int destBoxRow = this.agentRows[agent] + action.boxRowDelta;
+                    int destBoxCol = this.agentCols[agent] + action.boxColDelta;
+                    box = this.boxes[prevBoxRow][prevBoxCol];
+                    this.boxes[prevBoxRow][prevBoxCol] = 0;
+                    this.boxes[destBoxRow][destBoxCol] = box;
+
             }
         }
     }
@@ -202,18 +215,43 @@ public class State
         int boxRow;
         int boxCol;
         char box;
-        int destinationRow;
-        int destinationCol;
+        int destRowAgent;
+        int destColAgent;
+        int destRowBox;
+        int destColBox;
         switch (action.type)
         {
             case NoOp:
                 return true;
 
             case Move:
-                destinationRow = agentRow + action.agentRowDelta;
-                destinationCol = agentCol + action.agentColDelta;
-                return this.cellIsFree(destinationRow, destinationCol);
+                destRowAgent = agentRow + action.agentRowDelta;
+                destColAgent = agentCol + action.agentColDelta;
+                return this.cellIsFree(destRowAgent, destColAgent);
 
+            case Push:
+                destRowAgent = agentRow + action.agentRowDelta;
+                destColAgent = agentCol + action.agentColDelta;
+                // check if there is a box in the agent destination
+                if (boxes[destRowAgent][destColAgent] != 0) {
+                    // check if the box destination is free
+                    destRowBox = destRowAgent + action.boxRowDelta;
+                    destColBox = destColAgent + action.boxColDelta;
+                    return this.cellIsFree(destRowBox, destColBox);
+                }
+                return false;
+
+            case Pull:
+                // Check if there is a box to pull
+                boxRow = agentRow - action.boxRowDelta;
+                boxCol = agentCol - action.boxColDelta;
+                if (boxes[boxRow][boxCol] != 0) {
+                    // Check if agent destination is free
+                    destRowAgent = agentRow + action.agentRowDelta;
+                    destColAgent = agentCol + action.agentColDelta;
+                    return this.cellIsFree(destRowAgent, destColAgent);
+                }
+                return false;
         }
 
         // Unreachable:
@@ -246,8 +284,20 @@ public class State
                 case Move:
                     destinationRows[agent] = agentRow + action.agentRowDelta;
                     destinationCols[agent] = agentCol + action.agentColDelta;
-                    boxRows[agent] = agentRow; // Distinct dummy value
-                    boxCols[agent] = agentCol; // Distinct dummy value
+                    break;
+
+                case Push:
+                    destinationRows[agent] = agentRow + action.agentRowDelta;
+                    destinationCols[agent] = agentCol + action.agentColDelta;
+                    boxRows[agent] = destinationRows[agent] + action.boxRowDelta;
+                    boxCols[agent] = destinationCols[agent] + action.boxColDelta;
+                    break;
+
+                case Pull:
+                    destinationRows[agent] = agentRow + action.agentRowDelta;
+                    destinationCols[agent] = agentCol + action.agentColDelta;
+                    boxRows[agent] = agentRow - action.boxRowDelta;
+                    boxCols[agent] = agentCol - action.boxColDelta;
                     break;
            }
         }
