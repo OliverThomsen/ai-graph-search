@@ -99,8 +99,7 @@ public class State
                     this.agentCols[agent] += action.agentColDelta;
                     break;
 
-                // Push and Pull
-                default:
+                case Push:
                     this.agentRows[agent] += action.agentRowDelta;
                     this.agentCols[agent] += action.agentColDelta;
                     int prevBoxRow = this.agentRows[agent];
@@ -110,7 +109,18 @@ public class State
                     box = this.boxes[prevBoxRow][prevBoxCol];
                     this.boxes[prevBoxRow][prevBoxCol] = 0;
                     this.boxes[destBoxRow][destBoxCol] = box;
+                    break;
 
+                case Pull:
+                    prevBoxRow = this.agentRows[agent] - action.agentRowDelta;
+                    prevBoxCol = this.agentCols[agent] - action.agentColDelta;
+                    destBoxRow = this.agentRows[agent];
+                    destBoxCol = this.agentCols[agent];
+                    this.agentRows[agent] += action.agentRowDelta;
+                    this.agentCols[agent] += action.agentColDelta;
+                    box = this.boxes[prevBoxRow][prevBoxCol];
+                    this.boxes[prevBoxRow][prevBoxCol] = 0;
+                    this.boxes[destBoxRow][destBoxCol] = box;
             }
         }
     }
