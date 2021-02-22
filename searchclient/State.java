@@ -112,8 +112,8 @@ public class State
                     break;
 
                 case Pull:
-                    prevBoxRow = this.agentRows[agent] - action.agentRowDelta;
-                    prevBoxCol = this.agentCols[agent] - action.agentColDelta;
+                    prevBoxRow = this.agentRows[agent] - action.boxRowDelta;
+                    prevBoxCol = this.agentCols[agent] - action.boxColDelta;
                     destBoxRow = this.agentRows[agent];
                     destBoxCol = this.agentCols[agent];
                     this.agentRows[agent] += action.agentRowDelta;
@@ -292,6 +292,8 @@ public class State
                 case Move:
                     agentRows[agent] = agentRow + action.agentRowDelta;
                     agentCols[agent] = agentCol + action.agentColDelta;
+                    boxRows[agent] = -1; // Distinct dummy value
+                    boxCols[agent] = -1; // Distinct dummy value
                     break;
 
                 case Push:
@@ -331,18 +333,21 @@ public class State
                 }
 
                 // Boxes moving into same cell
-                if (boxRows[a1] == boxRows[a2] && boxCols[a1] == boxCols[a2] ) {
+                if ( (boxRows[a1] == boxRows[a2] && boxRows[a1] != -1)  && (boxCols[a1] == boxCols[a2] && boxCols[a1] != -1) ) {
                     return true;
                 }
-            }
-        }
 
-        // Box and Agent moving into same cell
-        for (int a = 0; a < numAgents; a++) {
-            for (int b = 0; b < numAgents; b++) {
-                if (agentRows[a] == boxRows[b] && agentCols[a] == boxCols[b]) {
+                // Agent moves into box
+                if (agentRows[a1] == boxRows[a2] && agentCols[a1] == boxCols[a2]) {
                     return true;
                 }
+
+                // Box moves into agent
+                if (boxRows[a1] == agentRows[a2] && boxCols[a1] == agentCols[a2]) {
+                    return true;
+                }
+
+
             }
         }
 
