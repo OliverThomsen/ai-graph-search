@@ -1,7 +1,6 @@
 package searchclient;
 
-import java.util.ArrayDeque;
-import java.util.HashSet;
+import java.util.*;
 
 public interface Frontier
 {
@@ -107,40 +106,48 @@ class FrontierBestFirst
         implements Frontier
 {
     private Heuristic heuristic;
+    private final HashSet<State> set = new HashSet<>(65536);
+    private final PriorityQueue<State> priorityQueue;
+
 
     public FrontierBestFirst(Heuristic h)
     {
         this.heuristic = h;
+        priorityQueue = new PriorityQueue<>(65536, heuristic);
     }
 
     @Override
     public void add(State state)
     {
-        throw new NotImplementedException();
+        priorityQueue.add(state);
+        this.set.add(state);
     }
 
     @Override
     public State pop()
     {
-        throw new NotImplementedException();
+        State state = this.priorityQueue.poll();
+        this.priorityQueue.remove(state);
+        this.set.remove(state);
+        return state;
     }
 
     @Override
     public boolean isEmpty()
     {
-        throw new NotImplementedException();
+        return this.priorityQueue.isEmpty();
     }
 
     @Override
     public int size()
     {
-        throw new NotImplementedException();
+        return this.priorityQueue.size();
     }
 
     @Override
     public boolean contains(State state)
     {
-        throw new NotImplementedException();
+        return this.set.contains(state);
     }
 
     @Override
