@@ -8,100 +8,78 @@ import java.util.Map;
 public abstract class Heuristic
         implements Comparator<State>
 {
-    private Map<Character,Integer[]> goalcoordinates = new HashMap<>();
-    private Map<Character,Integer[]> boxgoallenght = new HashMap<>();
-
-
-
+    private Map<Character,Integer[]> goalCoordinates = new HashMap<>();
 
     public Heuristic(State initialState)
     {
         // Here's a chance to pre-process the static parts of the level.
-
         for (int row = 1; row < initialState.goals.length -1 ; row++) {
             for (int col = 1; col < initialState.goals[row].length -1 ; col++) {
 
                 char goal = initialState.goals[row][col];
 
-
                 if ('0' <= goal && goal <= '9' ) {
                     Integer[] coordinates = new Integer[2];
                     coordinates[0] = row;
                     coordinates[1] = col;
-                    goalcoordinates.put(goal,coordinates);
-
-
-
+                    goalCoordinates.put(goal,coordinates);
                 }
 
                 if ( 'A' <= goal && goal <= 'Z')   {
                     Integer[] coordinates = new Integer[2];
                     coordinates[0] = row;
                     coordinates[1] = col;
-                    goalcoordinates.put(goal,coordinates);
-
+                    goalCoordinates.put(goal,coordinates);
                 }
-
-
             }
         }
-
-
-
-        }
-
-
-
-
-
-
+    }
 
     public int h(State s)
     {
-
         int cost = 0;
+        Map<Character,Integer[]> boxToGoalLength = new HashMap<>(); // Shortest Manhattan length to goal, One entry for each box type A,B,C...
 
-        boxgoallenght = new HashMap<>();
-
-        for (int row = 1; row < s.goals.length - 1; row++) {
-            for (int col = 1; col < s.goals[row].length - 1; col++) {
+        // Loop through all box matrix to find each box
+        for (int row = 1; row < s.boxes.length - 1; row++) {
+            for (int col = 1; col < s.boxes[row].length - 1; col++) {
                 char box = s.boxes[row][col];
 
-                if(goalcoordinates.containsKey(box))
-                {
-
-                    Integer[] goalcoor = goalcoordinates.get(box);
+                // Check if field contains box
+                if('A' <= box && box <= 'Z') {
+                    // Get goal coordinates for the box
+                    Integer[] goalcoor = goalCoordinates.get(box);
+                    // Find box Manhattan length to goal
                     int rowdiff = Math.abs(row - goalcoor[0]);
                     int coldiff = Math.abs(col - goalcoor[1]);
-                    int manhlenght = rowdiff + coldiff;
+                    int manhLength = rowdiff + coldiff;
 
-                    if (boxgoallenght.containsKey(box)){
-                        Integer[] boxvalues = boxgoallenght.get(box);
+                    // Save the box's manhattan length in the map
+                    if (boxToGoalLength.containsKey(box)){
+                        Integer[] boxvalues = boxToGoalLength.get(box);
                         int prevmanhlenght = boxvalues[2];
-                        if (prevmanhlenght > manhlenght){
+                        // overwrite length if smaller than previous length
+                        if (prevmanhlenght > manhLength){
                             boxvalues[0] = row;
                             boxvalues[1] = col;
-                            boxvalues[2] = manhlenght;
-                            boxgoallenght.replace(box,boxvalues);
-
+                            boxvalues[2] = manhLength;
+                            boxToGoalLength.replace(box,boxvalues);
                         }
                     }
+                    // Always Save the box's manhattan length in the map if first time
                     else {
                         Integer[] boxvalues = new Integer[3];
                         boxvalues[0] = row;
                         boxvalues[1] = col;
-                        boxvalues[2] = manhlenght;
-                        boxgoallenght.put(box,boxvalues);
-
-                    }
-
+                        boxvalues[2] = manhLength;
+                        boxToGoalLength.put(box,boxvalues);
                     }
                 }
-
             }
+        }
 
-        // Total distance of each box of a type which is closets to goal
-        Iterator it = boxgoallenght.entrySet().iterator();
+        // Total distance of boxes to goal
+        Iterator it = boxToGoalLength.entrySet().iterator();
         while (it.hasNext()){
             Map.Entry pair = (Map.Entry) it.next();
             Integer[] values = (Integer[]) pair.getValue();
@@ -111,65 +89,64 @@ public abstract class Heuristic
             }
         }
 
+        // Loop over each agent
         for (int row = 0; row < s.agentRows.length ; row++) {
             char agent = Character.forDigit(row,10);
-
+            int agentcost = 0;
             // Agent distance to own goal
-            if (goalcoordinates.containsKey(agent))
+            if (goalCoordinates.containsKey(agent))
             {
-                Integer[] goalcoor = goalcoordinates.get(agent);
+                Integer[] goalcoor = goalCoordinates.get(agent);
                 int rowdiff = Math.abs(s.agentRows[row] - goalcoor[0]);
                 int coldiff = Math.abs(s.agentCols[row] - goalcoor[1]);
                 cost += rowdiff + coldiff;
+                agentcost += rowdiff + coldiff;
             }
 
-            // Agent distance to box of type closest to goal
-            Iterator it2 = boxgoallenght.entrySet().iterator();
+            // Agent distance the box closest to goal
+            Iterator it2 = boxToGoalLength.entrySet().iterator();
             while (it2.hasNext()){
                 Map.Entry pair = (Map.Entry) it2.next();
                 Integer[] values = (Integer[]) pair.getValue();
-                int rowdiff = Math.abs(s.agentRows[row] - values[0]);
-                int coldiff = Math.abs(s.agentCols[row] - values[1]);
-                cost += rowdiff + coldiff;
-            }
-
-
-        }
-
-
-
-
-        /// goal count heuristic
-        /*
-        int goalCount = 0;
-
-        for (int row = 1; row < s.goals.length - 1; row++) {
-            for (int col = 1; col < s.goals[row].length - 1; col++) {
-
-                char goal = s.goals[row][col];
-
-                if ('0' <= goal && goal <= '9' ) {
-                    goalCount++;
-
-                    if(s.agentRows[goal - '0'] == row && s.agentCols[goal - '0'] == col){
-                        goalCount--;
-                    }
+                // Check if box and agent have same color
+                Color agentColor = s.agentColors[agent - '0'];
+                Color boxColor = s.boxColors[(char)pair.getKey() - 'A'];
+                if (agentColor == boxColor) {
+                    int rowdiff = Math.abs(s.agentRows[row] - values[0]);
+                    int coldiff = Math.abs(s.agentCols[row] - values[1]);
+                    cost += rowdiff + coldiff;
+                    // Divide by 2 to give lower weight compared to the box's distance to its goal
+                    agentcost += (rowdiff + coldiff)/2;
                 }
-
-                if ( 'A' <= goal && goal <= 'Z')   {
-                    goalCount++;
-
-                    if (s.boxes[row][col] == goal ) {
-                        goalCount--;
-                    }
-                }
-
             }
         }
-        return goalCount;
 
-        */
-            return cost;
+
+//        /// goal count heuristic
+//        for (int row = 1; row < s.goals.length - 1; row++) {
+//            for (int col = 1; col < s.goals[row].length - 1; col++) {
+//
+//                char goal = s.goals[row][col];
+//
+//                if ('0' <= goal && goal <= '9' ) {
+//                    cost++;
+//
+//                    if(s.agentRows[goal - '0'] == row && s.agentCols[goal - '0'] == col){
+//                        cost--;
+//                    }
+//                }
+//
+//                if ( 'A' <= goal && goal <= 'Z')   {
+//                    cost++;
+//
+//                    if (s.boxes[row][col] == goal ) {
+//                        cost--;
+//                    }
+//                }
+//
+//            }
+//        }
+        return cost;
     }
 
     public abstract int f(State s);
