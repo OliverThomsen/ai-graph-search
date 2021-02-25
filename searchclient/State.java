@@ -243,11 +243,13 @@ public class State
                 destRowAgent = agentRow + action.agentRowDelta;
                 destColAgent = agentCol + action.agentColDelta;
                 // check if there is a box in the agent destination
-                if (boxes[destRowAgent][destColAgent] != 0) {
-                    // check if the box destination is free
+                box = boxes[destRowAgent][destColAgent];
+                if (box != 0) {
+                    // check if the box destination is free and box has same color as agent
+                    boolean sameColor = this.boxColors[box - 'A'] == agentColor;
                     destRowBox = destRowAgent + action.boxRowDelta;
                     destColBox = destColAgent + action.boxColDelta;
-                    return this.cellIsFree(destRowBox, destColBox);
+                    return this.cellIsFree(destRowBox, destColBox) && sameColor;
                 }
                 return false;
 
@@ -255,11 +257,13 @@ public class State
                 // Check if there is a box to pull
                 boxRow = agentRow - action.boxRowDelta;
                 boxCol = agentCol - action.boxColDelta;
-                if (boxes[boxRow][boxCol] != 0) {
-                    // Check if agent destination is free
+                box = boxes[boxRow][boxCol];
+                if (box != 0) {
+                    // Check if agent destination is free and agent has same color as box
+                    boolean sameColor = this.boxColors[box - 'A'] == agentColor;
                     destRowAgent = agentRow + action.agentRowDelta;
                     destColAgent = agentCol + action.agentColDelta;
-                    return this.cellIsFree(destRowAgent, destColAgent);
+                    return this.cellIsFree(destRowAgent, destColAgent) && sameColor;
                 }
                 return false;
         }
