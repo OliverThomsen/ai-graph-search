@@ -92,7 +92,6 @@ public abstract class Heuristic
         // Loop over each agent
         for (int row = 0; row < s.agentRows.length ; row++) {
             char agent = Character.forDigit(row,10);
-            int agentcost = 0;
             // Agent distance to own goal
             if (goalCoordinates.containsKey(agent))
             {
@@ -100,10 +99,10 @@ public abstract class Heuristic
                 int rowdiff = Math.abs(s.agentRows[row] - goalcoor[0]);
                 int coldiff = Math.abs(s.agentCols[row] - goalcoor[1]);
                 cost += rowdiff + coldiff;
-                agentcost += rowdiff + coldiff;
             }
 
-            // Agent distance the box closest to goal
+            // Agent distance to the box closest to goal
+            int boxCost = 0;
             Iterator it2 = boxToGoalLength.entrySet().iterator();
             while (it2.hasNext()){
                 Map.Entry pair = (Map.Entry) it2.next();
@@ -114,11 +113,11 @@ public abstract class Heuristic
                 if (agentColor == boxColor) {
                     int rowdiff = Math.abs(s.agentRows[row] - values[0]);
                     int coldiff = Math.abs(s.agentCols[row] - values[1]);
-                    cost += rowdiff + coldiff;
                     // Divide by 2 to give lower weight compared to the box's distance to its goal
-                    agentcost += (rowdiff + coldiff)/2;
+                    boxCost += rowdiff + coldiff;
                 }
             }
+            cost += boxCost;
         }
 
 

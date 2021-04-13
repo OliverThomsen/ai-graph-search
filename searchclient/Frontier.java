@@ -127,7 +127,6 @@ class FrontierBestFirst
     public State pop()
     {
         State state = this.priorityQueue.poll();
-        this.priorityQueue.remove(state);
         this.set.remove(state);
         return state;
     }
