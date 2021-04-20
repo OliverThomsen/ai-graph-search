@@ -15,7 +15,7 @@ public class State
     */
     public int[] agentRows;
     public int[] agentCols;
-    public static Color[] agentColors;
+    public Color[] agentColors;
 
     /*
         The walls, boxes, and goals arrays are indexed from the top-left of the level, row-major order (row, col).
@@ -28,15 +28,15 @@ public class State
         For example, this.walls[2] is an array of booleans for the third row.
         this.walls[row][col] is true if there's a wall at (row, col).
     */
-    public static boolean[][] walls;
+    public boolean[][] walls;
     public char[][] boxes;
-    public static char[][] goals;
+    public char[][] goals;
 
     /*
         The box colors are indexed alphabetically. So this.boxColors[0] is the color of A boxes, 
         this.boxColor[1] is the color of B boxes, etc.
     */
-    public static Color[] boxColors;
+    public Color[] boxColors;
  
     public final State parent;
     public final Action[] jointAction;
@@ -45,18 +45,40 @@ public class State
     private int hash = 0;
 
 
+    // Constructs copy of state
+    public State(State state) {
+        this.boxColors = Arrays.copyOf(state.boxColors, state.boxColors.length);
+        this.agentColors = Arrays.copyOf(state.agentColors, state.agentColors.length);
+        this.agentRows = Arrays.copyOf(state.agentRows, state.agentRows.length);
+        this.agentCols = Arrays.copyOf(state.agentCols, state.agentCols.length);
+        this.boxes = new char[state.boxes.length][];
+        this.walls = new boolean[state.walls.length][];
+        this.goals = new char[state.goals.length][];
+        for (int i = 0; i < state.boxes.length; i++)
+        {
+            this.boxes[i] = Arrays.copyOf(state.boxes[i], state.boxes[i].length);
+            this.walls[i] = Arrays.copyOf(state.walls[i], state.walls[i].length);
+            this.goals[i] = Arrays.copyOf(state.goals[i], state.goals[i].length);
+        }
+
+
+        this.parent = null;
+        this.jointAction = null;
+        this.g = 0;
+    }
+
     // Constructs an initial state.
     // Arguments are not copied, and therefore should not be modified after being passed in.
     public State(int[] agentRows, int[] agentCols, Color[] agentColors, boolean[][] walls,
                  char[][] boxes, Color[] boxColors, char[][] goals
     )
     {
+        this.boxColors = boxColors;
+        this.agentColors = agentColors;
         this.agentRows = agentRows;
         this.agentCols = agentCols;
-        this.agentColors = agentColors;
         this.walls = walls;
         this.boxes = boxes;
-        this.boxColors = boxColors;
         this.goals = goals;
         this.parent = null;
         this.jointAction = null;
@@ -69,12 +91,18 @@ public class State
     private State(State parent, Action[] jointAction)
     {
         // Copy parent
+        this.boxColors = Arrays.copyOf(parent.boxColors, parent.boxColors.length);
+        this.agentColors = Arrays.copyOf(parent.agentColors, parent.agentColors.length);
         this.agentRows = Arrays.copyOf(parent.agentRows, parent.agentRows.length);
         this.agentCols = Arrays.copyOf(parent.agentCols, parent.agentCols.length);
         this.boxes = new char[parent.boxes.length][];
+        this.walls = new boolean[parent.walls.length][];
+        this.goals = new char[parent.goals.length][];
         for (int i = 0; i < parent.boxes.length; i++)
         {
             this.boxes[i] = Arrays.copyOf(parent.boxes[i], parent.boxes[i].length);
+            this.walls[i] = Arrays.copyOf(parent.walls[i], parent.walls[i].length);
+            this.goals[i] = Arrays.copyOf(parent.goals[i], parent.goals[i].length);
         }
 
         // Set own parameters
