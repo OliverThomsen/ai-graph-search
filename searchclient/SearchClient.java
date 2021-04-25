@@ -20,6 +20,18 @@ public class SearchClient {
         originalState = Parser.parseLevel(serverMessages);
 
 
+        Preprocessing preprocessing = new Preprocessing(originalState);
+
+        Integer[][] referncemap = preprocessing.getReferenceMap();
+
+        for (int i = 0; i < referncemap.length; i++) {
+            System.err.println("");
+            for (int j = 0; j < referncemap[0].length; j++) {
+                System.err.print(j);
+            }
+
+        }
+
         // Split state into sub goals by splitting state into sub states
         // find partial plan and append to final plan
 

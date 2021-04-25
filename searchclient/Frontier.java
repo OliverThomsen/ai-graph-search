@@ -12,15 +12,13 @@ public interface Frontier
 }
 
 class FrontierBestFirst
-        implements Frontier
-{
+        implements Frontier {
     private Heuristic heuristic;
     private final HashSet<AgentState> set = new HashSet<>(65536);
     private final PriorityQueue<AgentState> priorityQueue;
 
 
-    public FrontierBestFirst(Heuristic h)
-    {
+    public FrontierBestFirst(Heuristic h) {
         this.heuristic = h;
         priorityQueue = new PriorityQueue<>(65536, heuristic);
     }
@@ -41,14 +39,12 @@ class FrontierBestFirst
     }
 
     @Override
-    public boolean isEmpty()
-    {
+    public boolean isEmpty() {
         return this.priorityQueue.isEmpty();
     }
 
     @Override
-    public int size()
-    {
+    public int size() {
         return this.priorityQueue.size();
     }
 
@@ -57,4 +53,44 @@ class FrontierBestFirst
     {
         return this.set.contains(state);
     }
+
+    @Override
+    public String getName() {
+        return String.format("best-first search using %s", this.heuristic.toString());
+    }
 }
+
+    class PreProcessFrontierBFS
+    {
+        private final ArrayDeque<PreState> queue = new ArrayDeque<>(65536);
+
+
+
+        public void add(PreState prestate)
+        {
+            this.queue.addLast(prestate);
+
+        }
+
+
+        public PreState pop()
+        {
+            PreState prestate = this.queue.pollFirst();
+            return prestate;
+        }
+
+
+        public boolean isEmpty()
+        {
+            return this.queue.isEmpty();
+        }
+
+
+        public int size()
+        {
+            return this.queue.size();
+        }
+
+    }
+
+
