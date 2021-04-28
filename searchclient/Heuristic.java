@@ -5,13 +5,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-public abstract class Heuristic
-        implements Comparator<State>
-{
+public abstract class Heuristic implements Comparator<AgentState> {
     private Map<Character,Integer[]> goalCoordinates = new HashMap<>();
 
-    public Heuristic(State initialState)
-    {
+    public Heuristic(AgentState initialState) {
         // Here's a chance to pre-process the static parts of the level.
         for (int row = 1; row < initialState.goals.length -1 ; row++) {
             for (int col = 1; col < initialState.goals[row].length -1 ; col++) {
@@ -35,8 +32,7 @@ public abstract class Heuristic
         }
     }
 
-    public int h(State s)
-    {
+    public int h(AgentState s) {
         int cost = 0;
         Map<Character,Integer[]> boxToGoalLength = new HashMap<>(); // Shortest Manhattan length to goal, One entry for each box type A,B,C...
 
@@ -89,136 +85,49 @@ public abstract class Heuristic
             }
         }
 
-        // Loop over each agent
-        for (int row = 0; row < s.agentRows.length ; row++) {
-            char agent = Character.forDigit(row,10);
-            // Agent distance to own goal
-            if (goalCoordinates.containsKey(agent))
-            {
-                Integer[] goalcoor = goalCoordinates.get(agent);
-                int rowdiff = Math.abs(s.agentRows[row] - goalcoor[0]);
-                int coldiff = Math.abs(s.agentCols[row] - goalcoor[1]);
-                cost += rowdiff + coldiff;
-            }
-
-            // Agent distance to the box closest to goal
-            int boxCost = 0;
-            Iterator it2 = boxToGoalLength.entrySet().iterator();
-            while (it2.hasNext()){
-                Map.Entry pair = (Map.Entry) it2.next();
-                Integer[] values = (Integer[]) pair.getValue();
-                // Check if box and agent have same color
-                Color agentColor = s.agentColors[agent - '0'];
-                Color boxColor = s.boxColors[(char)pair.getKey() - 'A'];
-                if (agentColor == boxColor) {
-                    int rowdiff = Math.abs(s.agentRows[row] - values[0]);
-                    int coldiff = Math.abs(s.agentCols[row] - values[1]);
-                    // Divide by 2 to give lower weight compared to the box's distance to its goal
-                    boxCost += rowdiff + coldiff;
-                }
-            }
-            cost += boxCost;
+        // Agent distance to own goal
+        if (goalCoordinates.containsKey(s.agent))
+        {
+            Integer[] goalcoor = goalCoordinates.get(s.agent);
+            int rowdiff = Math.abs(s.row - goalcoor[0]);
+            int coldiff = Math.abs(s.col - goalcoor[1]);
+            cost += rowdiff + coldiff;
         }
 
+        // Agent distance to the box closest to goal
+        Iterator it2 = boxToGoalLength.entrySet().iterator();
+        while (it2.hasNext()){
+            Map.Entry pair = (Map.Entry) it2.next();
+            Integer[] values = (Integer[]) pair.getValue();
+            int rowdiff = Math.abs(s.row - values[0]);
+            int coldiff = Math.abs(s.col - values[1]);
+            cost += rowdiff + coldiff;
+        }
 
-//        /// goal count heuristic
-//        for (int row = 1; row < s.goals.length - 1; row++) {
-//            for (int col = 1; col < s.goals[row].length - 1; col++) {
-//
-//                char goal = s.goals[row][col];
-//
-//                if ('0' <= goal && goal <= '9' ) {
-//                    cost++;
-//
-//                    if(s.agentRows[goal - '0'] == row && s.agentCols[goal - '0'] == col){
-//                        cost--;
-//                    }
-//                }
-//
-//                if ( 'A' <= goal && goal <= 'Z')   {
-//                    cost++;
-//
-//                    if (s.boxes[row][col] == goal ) {
-//                        cost--;
-//                    }
-//                }
-//
-//            }
-//        }
         return cost;
     }
 
-    public abstract int f(State s);
+    public abstract int f(AgentState s);
 
     @Override
-    public int compare(State s1, State s2)
+    public int compare(AgentState s1, AgentState s2)
     {
         return this.f(s1) - this.f(s2);
     }
 }
 
-class HeuristicAStar
-        extends Heuristic
-{
-    public HeuristicAStar(State initialState)
-    {
+class HeuristicGreedy extends Heuristic {
+    public HeuristicGreedy(AgentState initialState) {
         super(initialState);
     }
 
     @Override
-    public int f(State s)
-    {
-        return s.g() + this.h(s);
-    }
-
-    @Override
-    public String toString()
-    {
-        return "A* evaluation";
-    }
-}
-
-class HeuristicWeightedAStar
-        extends Heuristic
-{
-    private int w;
-
-    public HeuristicWeightedAStar(State initialState, int w)
-    {
-        super(initialState);
-        this.w = w;
-    }
-
-    @Override
-    public int f(State s)
-    {
-        return s.g() + this.w * this.h(s);
-    }
-
-    @Override
-    public String toString()
-    {
-        return String.format("WA*(%d) evaluation", this.w);
-    }
-}
-
-class HeuristicGreedy
-        extends Heuristic
-{
-    public HeuristicGreedy(State initialState)
-    {
-        super(initialState);
-    }
-
-    @Override
-    public int f(State s)
-    {
+    public int f(AgentState s) {
         return this.h(s);
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "greedy evaluation";
     }
 }

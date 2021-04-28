@@ -6,14 +6,14 @@ import java.util.HashSet;
 
 public class GraphSearch {
 
-    public static State search(State initialState, Frontier frontier)
+    public static AgentState search(AgentState initialState, Frontier frontier)
     {
         int iterations = 0;
 
         // initialize the frontier using the initial state of problem
         frontier.add(initialState);
         // initialize the explored set to be empty
-        HashSet<State> explored = new HashSet<>();
+        HashSet<AgentState> explored = new HashSet<>();
 
         while (true) {
             // if the frontier is empty then return failure
@@ -22,7 +22,7 @@ public class GraphSearch {
             }
 
             // choose a leaf node and remove it from the frontier
-            State currentState = frontier.pop();
+            AgentState currentState = frontier.pop();
 
 
             //Print a status message every 10000 iteration
@@ -41,7 +41,7 @@ public class GraphSearch {
             explored.add(currentState);
 
             // expand the chosen node, adding the resulting nodes to the frontier
-            for (State state : currentState.getExpandedStates()) {
+            for (AgentState state : currentState.getExpandedStates()) {
                 // only if not in the frontier or explored set
                 if (!frontier.contains(state) && !explored.contains(state)) {
                     frontier.add(state);
@@ -52,7 +52,7 @@ public class GraphSearch {
 
     private static long startTime = System.nanoTime();
 
-    private static void printSearchStatus(HashSet<State> explored, Frontier frontier)
+    private static void printSearchStatus(HashSet<AgentState> explored, Frontier frontier)
     {
         String statusTemplate = "#Expanded: %,8d, #Frontier: %,8d, #Generated: %,8d, Time: %3.3f s\n%s\n";
         double elapsedTime = (System.nanoTime() - startTime) / 1_000_000_000d;
