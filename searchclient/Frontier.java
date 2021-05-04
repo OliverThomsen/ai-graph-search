@@ -9,6 +9,7 @@ public interface Frontier
     boolean isEmpty();
     int size();
     boolean contains(AgentState state);
+    String getName();
 }
 
 class FrontierBestFirst
