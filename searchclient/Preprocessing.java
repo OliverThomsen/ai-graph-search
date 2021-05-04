@@ -9,17 +9,14 @@ public class Preprocessing {
         //instantiate the new map used to reference how far away the agent is for any point on the map
         referenceMap = new Integer[initialState.walls.length][initialState.walls[0].length];
 
-        frontier.add(new PreState(0, 0, 0));
+        frontier.add(new PreState(initialState.agentRows[0], initialState.agentCols[0], 0));
 
-        while (!reachedEndOfMap) {
-            // if the frontier is empty then the whole map has been searched
-            if (frontier.isEmpty()) {
-                reachedEndOfMap = true;
-            }
+        while (!frontier.isEmpty()) {
 
             // choose a leaf node and remove it from the frontier
             // pop returns all leaf nodes from the frontier
             PreState currentPreState = frontier.pop();
+
 
             // add the node to the explored set
             // this adds all the leif nodes the explored set
@@ -38,7 +35,8 @@ public class Preprocessing {
                 // only if not in the frontier or explored set
                 if (prestate.x() >= 0 && prestate.y() >= 0 &&
                         prestate.x() < referenceMap.length && prestate.y() < referenceMap[0].length) {
-                    if (referenceMap[prestate.x()][prestate.y()] == null && initialState.walls[prestate.x()][prestate.y()] == false) {
+                    if (referenceMap[prestate.x()][prestate.y()] == null && initialState.walls[prestate.x()][prestate.y()] == false
+                    && !frontier.contains(prestate)) {
                         frontier.add(prestate);
                     }
                 }

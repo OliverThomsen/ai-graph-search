@@ -22,12 +22,12 @@ public class SearchClient {
 
         Preprocessing preprocessing = new Preprocessing(originalState);
 
-        Integer[][] referncemap = preprocessing.getReferenceMap();
+        Integer[][] referencemap = preprocessing.getReferenceMap();
 
-        for (int i = 0; i < referncemap.length; i++) {
+        for (int i = 0; i < referencemap.length; i++) {
             System.err.println("");
-            for (int j = 0; j < referncemap[0].length; j++) {
-                System.err.print(j);
+            for (int j = 0; j < referencemap[0].length; j++) {
+                System.err.print("[" + referencemap[i][j] + "]");
             }
 
         }
@@ -41,7 +41,7 @@ public class SearchClient {
         while(agentIndex < originalState.agentRows.length) {
             AgentState agentState = extractAgentState(originalState, agentIndex);
             try {
-                Frontier frontier = new FrontierBestFirst(new HeuristicGreedy(agentState));
+                Frontier frontier = new FrontierBestFirst(new HeuristicGreedy(agentState,referencemap));
                 agentState = search(agentState, frontier);
             } catch (OutOfMemoryError err) {
                 System.err.println("Max memory usage exceeded");

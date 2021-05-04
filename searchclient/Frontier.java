@@ -63,19 +63,21 @@ class FrontierBestFirst
     class PreProcessFrontierBFS
     {
         private final ArrayDeque<PreState> queue = new ArrayDeque<>(65536);
+        private final HashSet<PreState> set = new HashSet<>(65536);
 
 
 
         public void add(PreState prestate)
         {
             this.queue.addLast(prestate);
-
+            this.set.add(prestate);
         }
 
 
         public PreState pop()
         {
             PreState prestate = this.queue.pollFirst();
+            this.set.remove(prestate);
             return prestate;
         }
 
@@ -84,6 +86,8 @@ class FrontierBestFirst
         {
             return this.queue.isEmpty();
         }
+
+        public boolean contains(PreState preState) {return this.set.contains(preState);}
 
 
         public int size()

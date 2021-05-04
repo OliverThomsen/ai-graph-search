@@ -6,6 +6,7 @@ public class PreState{
     private int x = 0;
     private int y = 0;
     private int g = 0;
+    private int hash = 0;
 
 
     public PreState(int x, int y, int g){
@@ -36,5 +37,29 @@ public class PreState{
 
     public int x() {
         return this.x;
+    }
+
+    @Override
+    public boolean equals(Object other){
+        if (this == other) return true;
+
+        if (other == null || (this.getClass() != other.getClass())){
+            return false;
+        }
+
+        PreState preState = (PreState) other;
+        return (this.x == preState.x && this.y == preState.y);
+    }
+
+    @Override
+    public int hashCode(){
+        int result = 0;
+
+        result = 31*result + x;
+        result = 31*result + y;
+
+        return result;
+
+
     }
 }
