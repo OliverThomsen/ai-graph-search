@@ -84,11 +84,7 @@ public class AgentState {
     public AgentState(AgentState state) {
         this.row = state.row;
         this.col = state.col;
-        this.boxes = new char[state.boxes.length][];
-        for (int i = 0; i < state.boxes.length; i++)
-        {
-            this.boxes[i] = Arrays.copyOf(state.boxes[i], state.boxes[i].length);
-        }
+        this.boxes = clone(state.boxes);
         this.parent = null;
         this.action = null;
         this.g = 0;
@@ -103,6 +99,20 @@ public class AgentState {
             state = state.parent;
         }
         return plan;
+    }
+
+    public char[][][] extractRoute() {
+        AgentState state = this;
+        int rows = AgentState.walls.length;
+        int cols = AgentState.walls[0].length;
+        char[][][] route = new char[this.g][rows][cols];
+        while (state.action != null)
+        {
+            route[state.g - 1] = clone(state.boxes);
+            route[state.g - 1][state.row][state.col] = state.agent;
+            state = state.parent;
+        }
+        return route;
     }
 
     public boolean isGoalState() {
@@ -181,6 +191,14 @@ public class AgentState {
 
     public int g() {
         return this.g;
+    }
+
+    public static char[][] clone(char[][] matrix) {
+        char[][] newMatrix = new char[matrix.length][];
+        for (int i = 0; i < matrix.length; i++) {
+            newMatrix[i] = Arrays.copyOf(matrix[i], matrix[i].length);
+        }
+        return newMatrix;
     }
 
     @Override

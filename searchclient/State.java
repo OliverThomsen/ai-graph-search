@@ -88,7 +88,7 @@ public class State
 
     // Constructs the state resulting from applying jointAction in parent.
     // Precondition: Joint action must be applicable and non-conflicting in parent state.
-    private State(State parent, Action[] jointAction)
+    public State(State parent, Action[] jointAction)
     {
         // Copy parent
         this.boxColors = Arrays.copyOf(parent.boxColors, parent.boxColors.length);
@@ -210,7 +210,7 @@ public class State
                 jointAction[agent] = applicableActions[agent][actionsPermutation[agent]];
             }
 
-            if (!this.isConflicting(jointAction))
+            if (this.conflictingAgents(jointAction).length == 0)
             {
                 expandedStates.add(new State(this, jointAction));
             }
@@ -245,7 +245,7 @@ public class State
         return expandedStates;
     }
 
-    private boolean isApplicable(int agent, Action action)
+    public boolean isApplicable(int agent, Action action)
     {
         int agentRow = this.agentRows[agent];
         int agentCol = this.agentCols[agent];
@@ -300,7 +300,7 @@ public class State
         return false;
     }
 
-    private boolean isConflicting(Action[] jointAction)
+    public int[] conflictingAgents(Action[] jointAction)
     {
         int numAgents = this.agentRows.length;
 
@@ -308,6 +308,7 @@ public class State
         int[] agentCols = new int[numAgents]; // column of new cell to become occupied by action
         int[] boxRows = new int[numAgents]; // current row of box moved by action
         int[] boxCols = new int[numAgents]; // current column of box moved by action
+        char[][] map = AgentState.clone(this.boxes);
 
         // Collect cells to be occupied and boxes to be moved
         for (int agent = 0; agent < numAgents; ++agent)
@@ -319,6 +320,8 @@ public class State
             switch (action.type)
             {
                 case NoOp:
+                    // add agent to static map
+                    map[agentRow][agentCol] = (char) (agent +'0');
                     break;
 
                 case Move:
@@ -333,13 +336,19 @@ public class State
                     agentCols[agent] = agentCol + action.agentColDelta;
                     boxRows[agent] = agentRows[agent] + action.boxRowDelta;
                     boxCols[agent] = agentCols[agent] + action.boxColDelta;
+                    // remove box from static map
+                    map[agentRows[agent]][agentCols[agent]] = 0;
                     break;
 
                 case Pull:
                     agentRows[agent] = agentRow + action.agentRowDelta;
                     agentCols[agent] = agentCol + action.agentColDelta;
-                    boxRows[agent] = agentRow - action.boxRowDelta;
-                    boxCols[agent] = agentCol - action.boxColDelta;
+                    boxRows[agent] = agentRow;
+                    boxCols[agent] = agentCol;
+                    int oldBoxRow = agentRow - action.boxRowDelta;
+                    int oldBoxCol = agentCol - action.boxColDelta;
+                    // remove box from static map
+                    map[oldBoxRow][oldBoxCol] = 0;
                     break;
            }
         }
@@ -349,6 +358,11 @@ public class State
             if (jointAction[a1] == Action.NoOp)
             {
                 continue;
+            }
+
+            // Agent moving into stationary box or agent
+            if (map[agentRows[a1]][agentCols[a1]] != 0) {
+                return new int[] {a1};
             }
 
             for (int a2 = a1 + 1; a2 < numAgents; ++a2)
@@ -361,29 +375,29 @@ public class State
                 // Agents moving into same cell?
                 if (agentRows[a1] == agentRows[a2] && agentCols[a1] == agentCols[a2])
                 {
-                    return true;
+                    return new int[] {a1,a2};
                 }
 
                 // Boxes moving into same cell
                 if ( (boxRows[a1] == boxRows[a2] && boxRows[a1] != -1)  && (boxCols[a1] == boxCols[a2] && boxCols[a1] != -1) ) {
-                    return true;
+                    return new int[] {a1,a2};
                 }
 
-                // Agent moves into box
+                // Agent 1 and Box 2 moving into same cell
                 if (agentRows[a1] == boxRows[a2] && agentCols[a1] == boxCols[a2]) {
-                    return true;
+                    return new int[] {a1,a2};
                 }
 
-                // Box moves into agent
+                // Box 1 and Agent 2 moving into same cell
                 if (boxRows[a1] == agentRows[a2] && boxCols[a1] == agentCols[a2]) {
-                    return true;
+                    return new int[] {a1,a2};
                 }
 
 
             }
         }
 
-        return false;
+        return new int[0];
     }
 
     private boolean cellIsFree(int row, int col)

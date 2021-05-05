@@ -54,7 +54,6 @@ public abstract class Heuristic implements Comparator<AgentState> {
                     int manhLength = rowdiff + coldiff;
                     int maxLengthfromgoal = Math.max(referenceLengthfromgoal,manhLength);
                     //int maxLengthfromgoal = manhLength;
-                    System.err.println("this is the length from the box " + box + " to is goal " + maxLengthfromgoal);
 
                     // Save the box's manhattan length in the map
                     if (boxToGoalLength.containsKey(box)){
@@ -90,7 +89,6 @@ public abstract class Heuristic implements Comparator<AgentState> {
                 it.remove();
             }
         }
-        System.err.println("this is the length of all boxes to their goal the box " + cost);
 
         // Agent distance to own goal
         if (goalCoordinates.containsKey(s.agent)) {
@@ -123,7 +121,6 @@ public abstract class Heuristic implements Comparator<AgentState> {
             int manhLength =  rowdiff + coldiff;
             Integer referenceLengthfromgoal = Math.abs(agentReference - boxReference);
             int maxLengthfromgoal = Math.max(referenceLengthfromgoal,manhLength);
-            System.err.println("this is the amount of distance between the agent at row " + s.row + " and col " + s.col + " and the box at row " + values[0] + " and col " + values[1] + " which is " + maxLengthfromgoal);
             cost += (maxLengthfromgoal/2);
         }
 

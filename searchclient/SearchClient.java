@@ -3,56 +3,113 @@ package searchclient;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 public class SearchClient {
     static State originalState;
+    static AgentState[] agentStates;
+    static ArrayList<ArrayList<Action>> agentPlans;
     static ArrayList<Action[]> finalPlan = new ArrayList<>();
+    static BufferedReader serverMessages;
+    static Preprocessing preprocessing;
+    static Integer[][] referenceMap;
 
     public static void main(String[] args) throws IOException {
-        System.out.println("New and improved SearchClient");
+        System.out.println("Molilak");
 
         // Parse level
         BufferedReader serverMessages = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.US_ASCII));
         originalState = Parser.parseLevel(serverMessages);
 
+        preprocessing = new Preprocessing(originalState);
+        referenceMap = preprocessing.getReferenceMap();
 
-        Preprocessing preprocessing = new Preprocessing(originalState);
-
-        Integer[][] referencemap = preprocessing.getReferenceMap();
-
-        for (int i = 0; i < referencemap.length; i++) {
-            System.err.println("");
-            for (int j = 0; j < referencemap[0].length; j++) {
-                System.err.print("[" + referencemap[i][j] + "]");
-            }
-
+        agentPlans = new ArrayList<>(originalState.agentRows.length);
+        for (int a=0 ; a < originalState.agentRows.length ; a++) {
+            agentPlans.add(new ArrayList<>(0));
         }
 
-        // Split state into sub goals by splitting state into sub states
-        // find partial plan and append to final plan
+        while (!originalState.isGoalState()) {
+            findPartialAgentPlans();
+            combineAndApplyPlans();
+        }
 
-        // Choose one box color. Replace all other boxes with a wall. Save this in partial state
+        sendPlanToServer(finalPlan);
+    }
 
+    static void findPartialAgentPlans() {
         int agentIndex = 0;
         while(agentIndex < originalState.agentRows.length) {
+
+            // If agent already has a plan then skip agent
+            if (agentPlans.get(agentIndex).size() == 0) {
+                agentIndex++;
+                continue;
+            }
+
             AgentState agentState = extractAgentState(originalState, agentIndex);
             try {
-                Frontier frontier = new FrontierBestFirst(new HeuristicGreedy(agentState,referencemap));
+                Frontier frontier = new FrontierBestFirst(new HeuristicGreedy(agentState,referenceMap));
                 agentState = search(agentState, frontier);
             } catch (OutOfMemoryError err) {
                 System.err.println("Max memory usage exceeded");
             }
             Action[] agentPlan = agentState.extractPlan();
-            mergeIntoFinalPlan(agentPlan, agentIndex);
+            // save agent state
+            agentStates[agentIndex] = agentState;
+            // Append agent plan to previous agent plan
+            agentPlans.get(agentIndex).addAll(new ArrayList<>(Arrays.asList(agentPlan)));
+            // mergeIntoFinalPlan(agentPlan, agentIndex);
             agentIndex++;
         }
+    }
 
+    static void combineAndApplyPlans() {
+        boolean moreMoves = true;
+        int step = 0;
+        while (moreMoves) {
+            // loop over each agent to extract their move, and collect them in a joint action
+            Action[] jointAction = new Action[agentPlans.size()];
+            for (int agent=0; agent<agentPlans.size(); agent++) {
+                // make sure that there are more moves in the agent plan
+                if (agentPlans.get(agent).size() == step) {
+                    saveRemainingPlans(step);
+                    moreMoves = false;
+                    break;
+                }
+                Action action = agentPlans.get(agent).get(step);
+                jointAction[agent] = action;
+            }
 
-        // Send final plan to server
+            if (!moreMoves) continue;
+
+            // check if joint action is conflicting in original state
+            int[] conflictingAgents = originalState.conflictingAgents(jointAction);
+            while (conflictingAgents.length > 0) {
+                // Insert NoOp into one of the agent plans
+                int agent = conflictingAgents[0];
+                agentPlans.get(agent).add(step,Action.NoOp);
+                jointAction[agent] = Action.NoOp;
+                conflictingAgents = originalState.conflictingAgents(jointAction);
+            }
+            // apply joint action to original state
+            originalState = new State(originalState, jointAction);
+            step++;
+        }
+    }
+
+    static void saveRemainingPlans(int step) {
+        for (int agent=0 ; agent < agentPlans.size() ; agent++) {
+            ArrayList<Action> plan = agentPlans.get(agent);
+            ArrayList<Action> remainingPlan = new ArrayList<>(plan.subList(step, plan.size()));
+            agentPlans.set(agent, remainingPlan);
+        }
+
+    }
+
+    static void sendPlanToServer(ArrayList<Action[]> finalPlan) throws IOException{
         if (finalPlan.size() > 0) {
             System.err.format("Found solution og length %d", finalPlan.size());
             for (Action[] jointAction : finalPlan) {

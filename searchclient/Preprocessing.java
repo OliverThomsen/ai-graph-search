@@ -17,16 +17,9 @@ public class Preprocessing {
             // pop returns all leaf nodes from the frontier
             PreState currentPreState = frontier.pop();
 
-
             // add the node to the explored set
             // this adds all the leif nodes the explored set
             referenceMap[currentPreState.x()][currentPreState.y()] = currentPreState.g();
-
-            System.err.println(currentPreState.g());
-
-            System.err.println("this is x: " + currentPreState.x());
-
-            System.err.println("this is y: " + currentPreState.y());
 
             // expand the chosen node, adding the resulting nodes to the frontier
             // This expands all leif nodes, and for each node
@@ -47,6 +40,12 @@ public class Preprocessing {
     }
 
     public Integer[][] getReferenceMap() {
+//        for (int i = 0; i < referenceMap.length; i++) {
+//            System.err.println("");
+//            for (int j = 0; j < referenceMap[0].length; j++) {
+//                System.err.print("[" + referenceMap[i][j] + "]");
+//            }
+//        }
         return referenceMap;
     }
 }
