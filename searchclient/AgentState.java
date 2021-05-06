@@ -5,11 +5,11 @@ import java.util.Arrays;
 
 public class AgentState {
     public int row, col;
-    public static Color color;
-    public static char agent;
-    public static boolean[][] walls;
+    public Color color;
+    public char agent;
+    public boolean[][] walls;
     public char[][] boxes;
-    public static char[][] goals;
+    public char[][] goals;
     public AgentState parent;
     public Action action;
     private final int g;
@@ -17,10 +17,10 @@ public class AgentState {
 
     // Initial agent state
     public AgentState(int row, int col, Color color, char agent, boolean[][] walls, char[][] boxes, char[][] goals) {
-        AgentState.color = color;
-        AgentState.agent = agent;
-        AgentState.walls = walls;
-        AgentState.goals = goals;
+        this.color = color;
+        this.agent = agent;
+        this.walls = walls;
+        this.goals = goals;
         this.row = row;
         this.col = col;
         this.boxes = boxes;
@@ -32,6 +32,10 @@ public class AgentState {
     // Construct state from applied action
     public AgentState(AgentState parentState, Action action) {
         // Copy parent
+        this.color = parentState.color;
+        this.agent = parentState.agent;
+        this.walls = clone(parentState.walls);
+        this.goals = clone(parentState.goals);
         this.row = parentState.row;
         this.col = parentState.col;
         this.boxes = new char[parentState.boxes.length][];
@@ -82,6 +86,10 @@ public class AgentState {
 
     // Constructs copy of state
     public AgentState(AgentState state) {
+        this.color = state.color;
+        this.agent = state.agent;
+        this.walls = clone(state.walls);
+        this.goals = clone(state.goals);
         this.row = state.row;
         this.col = state.col;
         this.boxes = clone(state.boxes);
@@ -103,8 +111,8 @@ public class AgentState {
 
     public char[][][] extractRoute() {
         AgentState state = this;
-        int rows = AgentState.walls.length;
-        int cols = AgentState.walls[0].length;
+        int rows = this.walls.length;
+        int cols = this.walls[0].length;
         char[][][] route = new char[this.g][rows][cols];
         while (state.action != null)
         {
@@ -201,6 +209,16 @@ public class AgentState {
         return newMatrix;
     }
 
+    public static boolean[][] clone(boolean[][] matrix) {
+        boolean[][] newMatrix = new boolean[matrix.length][];
+        for (int i = 0; i < matrix.length; i++) {
+            newMatrix[i] = Arrays.copyOf(matrix[i], matrix[i].length);
+        }
+        return newMatrix;
+    }
+
+
+
     @Override
     public int hashCode() {
         if (this.hash == 0) {
@@ -246,22 +264,22 @@ public class AgentState {
     @Override
     public String toString() {
         StringBuilder s = new StringBuilder();
-        for (int row = 0; row < AgentState.walls.length; row++)
+        for (int row = 0; row < this.walls.length; row++)
         {
-            for (int col = 0; col < AgentState.walls[row].length; col++)
+            for (int col = 0; col < this.walls[row].length; col++)
             {
 
                 if (this.boxes[row][col] > 0)
                 {
                     s.append(this.boxes[row][col]);
                 }
-                else if (AgentState.walls[row][col])
+                else if (this.walls[row][col])
                 {
                     s.append("+");
                 }
                 else if (this.row == row && this.col == col)
                 {
-                    s.append(AgentState.agent);
+                    s.append(this.agent);
                 }
                 else
                 {

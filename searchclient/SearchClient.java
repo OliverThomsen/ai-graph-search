@@ -17,15 +17,16 @@ public class SearchClient {
     static Integer[][] referenceMap;
 
     public static void main(String[] args) throws IOException {
-        System.out.println("Molilak");
+        System.out.println("MOLILAK");
 
         // Parse level
-        BufferedReader serverMessages = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.US_ASCII));
+        serverMessages = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.US_ASCII));
         originalState = Parser.parseLevel(serverMessages);
 
         preprocessing = new Preprocessing(originalState);
         referenceMap = preprocessing.getReferenceMap();
 
+        agentStates = new AgentState[originalState.agentRows.length];
         agentPlans = new ArrayList<>(originalState.agentRows.length);
         for (int a=0 ; a < originalState.agentRows.length ; a++) {
             agentPlans.add(new ArrayList<>(0));
@@ -36,20 +37,26 @@ public class SearchClient {
             combineAndApplyPlans();
         }
 
-        sendPlanToServer(finalPlan);
+        sendPlanToServer();
     }
 
     static void findPartialAgentPlans() {
         int agentIndex = 0;
         while(agentIndex < originalState.agentRows.length) {
+            AgentState agentState = extractAgentState(originalState, agentIndex);
+            agentStates[agentIndex] = agentState;
 
             // If agent already has a plan then skip agent
-            if (agentPlans.get(agentIndex).size() == 0) {
+            if (agentPlans.get(agentIndex).size() != 0) {
                 agentIndex++;
                 continue;
             }
 
-            AgentState agentState = extractAgentState(originalState, agentIndex);
+            if (agentStates[agentIndex].isGoalState()) {
+                agentIndex++;
+                continue;
+            }
+
             try {
                 Frontier frontier = new FrontierBestFirst(new HeuristicGreedy(agentState,referenceMap));
                 agentState = search(agentState, frontier);
@@ -58,6 +65,7 @@ public class SearchClient {
             }
             Action[] agentPlan = agentState.extractPlan();
             // save agent state
+            System.err.println(agentState);
             agentStates[agentIndex] = agentState;
             // Append agent plan to previous agent plan
             agentPlans.get(agentIndex).addAll(new ArrayList<>(Arrays.asList(agentPlan)));
@@ -69,17 +77,36 @@ public class SearchClient {
     static void combineAndApplyPlans() {
         boolean moreMoves = true;
         int step = 0;
+        int longestPlan = 0;
+        // make sure at least on agent still has a plan
+        for (ArrayList<Action> plan : agentPlans) {
+            longestPlan = Math.max(longestPlan, plan.size());
+        }
+
         while (moreMoves) {
             // loop over each agent to extract their move, and collect them in a joint action
             Action[] jointAction = new Action[agentPlans.size()];
             for (int agent=0; agent<agentPlans.size(); agent++) {
+                if (agentStates[agent].isGoalState()) {
+                    jointAction[agent] = Action.NoOp;
+                    if (step >= longestPlan) {
+                        moreMoves = false;
+                        break;
+                    } else continue;
+                }
+
                 // make sure that there are more moves in the agent plan
                 if (agentPlans.get(agent).size() == step) {
+                    System.err.println("agent"+ agent);
+                    System.err.println(agentStates[agent].isGoalState());
+                    System.err.println(agentStates[agent]);
+
                     saveRemainingPlans(step);
                     moreMoves = false;
+                    System.err.println("break");
                     break;
                 }
-                Action action = agentPlans.get(agent).get(step);
+                Action action = agentPlans.get(agent).get(step); //todo out of bounds
                 jointAction[agent] = action;
             }
 
@@ -95,6 +122,7 @@ public class SearchClient {
                 conflictingAgents = originalState.conflictingAgents(jointAction);
             }
             // apply joint action to original state
+            System.err.println(jointAction[0] + ", " + jointAction[1] + ", " + jointAction[2]);
             originalState = new State(originalState, jointAction);
             step++;
         }
@@ -103,21 +131,29 @@ public class SearchClient {
     static void saveRemainingPlans(int step) {
         for (int agent=0 ; agent < agentPlans.size() ; agent++) {
             ArrayList<Action> plan = agentPlans.get(agent);
-            ArrayList<Action> remainingPlan = new ArrayList<>(plan.subList(step, plan.size()));
-            agentPlans.set(agent, remainingPlan);
+            if (step <= plan.size()){
+                ArrayList<Action> remainingPlan = new ArrayList<>(plan.subList(step, plan.size()));
+                agentPlans.set(agent, remainingPlan);
+            }
         }
 
     }
 
-    static void sendPlanToServer(ArrayList<Action[]> finalPlan) throws IOException{
-        if (finalPlan.size() > 0) {
-            System.err.format("Found solution og length %d", finalPlan.size());
+    static void sendPlanToServer() throws IOException{
+        System.err.println(originalState);
+        Action[][] finalPlan = originalState.extractPlan();
+        if (finalPlan.length > 0) {
+            System.err.format("Found solution of length %d", finalPlan.length);
             for (Action[] jointAction : finalPlan) {
+//                System.err.print(jointAction[0].name);
                 System.out.print(jointAction[0].name);
                 for (int i = 1; i < jointAction.length; i++) {
+//                    System.err.print("|");
+//                    System.err.print(jointAction[i].name);
                     System.out.print("|");
                     System.out.print(jointAction[i].name);
                 }
+//                System.err.println();
                 System.out.println();
                 serverMessages.readLine();
             }
@@ -143,10 +179,6 @@ public class SearchClient {
                     if (state.boxColors[box - 'A'] == color) {
                         boxes[row][col] = box;
                     }
-                    // Box belongs to other agent - make wall
-                    else {
-                        walls[row][col] = true;
-                    }
                 }
                 char goal = state.goals[row][col];
                 if (isGoal(goal) && state.boxColors[goal - 'A'] == color) {
@@ -154,12 +186,7 @@ public class SearchClient {
                 }
             }
         }
-        // Make other agent positions into walls
-        for (int i = 0; i < originalState.agentRows.length; i++) {
-            if (i != agent) {
-                walls[originalState.agentRows[i]][originalState.agentCols[i]] = true;
-            }
-        }
+
         return new AgentState(agentRow, agentCol, color, Character.forDigit(agent, 10), walls, boxes, goals);
     }
 
