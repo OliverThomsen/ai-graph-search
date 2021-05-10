@@ -40,10 +40,14 @@ public class SearchClient {
         sendPlanToServer();
     }
 
+    // for ech agent new AgentSearch(agentState)
+
     static void findPartialAgentPlans() {
         int agentIndex = 0;
         while(agentIndex < originalState.agentRows.length) {
             AgentState agentState = extractAgentState(originalState, agentIndex);
+            // Action[] agentPlan =agentSearchClient.getSubPlan()
+            //
             agentStates[agentIndex] = agentState;
 
             // If agent already has a plan then skip agent
@@ -78,16 +82,17 @@ public class SearchClient {
         boolean moreMoves = true;
         int step = 0;
         int longestPlan = 0;
-        // make sure at least on agent still has a plan
-        for (ArrayList<Action> plan : agentPlans) {
-            longestPlan = Math.max(longestPlan, plan.size());
-        }
 
         while (moreMoves) {
+            // make sure at least on agent still has a plan
+            for (ArrayList<Action> plan : agentPlans) {
+                longestPlan = Math.max(longestPlan, plan.size());
+            }
+
             // loop over each agent to extract their move, and collect them in a joint action
             Action[] jointAction = new Action[agentPlans.size()];
             for (int agent=0; agent<agentPlans.size(); agent++) {
-                if (agentStates[agent].isGoalState()) {
+                if (agentStates[agent].isGoalState() && agentPlans.get(agent).size() == 0) {
                     jointAction[agent] = Action.NoOp;
                     if (step >= longestPlan) {
                         moreMoves = false;
@@ -115,15 +120,28 @@ public class SearchClient {
             // check if joint action is conflicting in original state
             int[] conflictingAgents = originalState.conflictingAgents(jointAction);
             while (conflictingAgents.length > 0) {
+                System.err.println("conflict");
+                System.err.println(jointAction[0] + ", " + jointAction[1] + ", " + jointAction[2] + ", " + jointAction[3]);
+                System.err.println(originalState);
                 // Insert NoOp into one of the agent plans
                 int agent = conflictingAgents[0];
                 agentPlans.get(agent).add(step,Action.NoOp);
                 jointAction[agent] = Action.NoOp;
+
+                boolean allNoOp = true;
+                for (Action action : jointAction) {
+                    if (action != Action.NoOp) allNoOp = false;
+                }
+                if (allNoOp) {
+                   // TODO: do something
+                }
                 conflictingAgents = originalState.conflictingAgents(jointAction);
             }
             // apply joint action to original state
-            System.err.println(jointAction[0] + ", " + jointAction[1] + ", " + jointAction[2]);
+            System.err.println("solution");
+            System.err.println(jointAction[0] + ", " + jointAction[1] + ", " + jointAction[2] + ", " + jointAction[3]);
             originalState = new State(originalState, jointAction);
+            System.err.println(originalState);System.err.println(originalState);
             step++;
         }
     }
