@@ -3,7 +3,8 @@ package searchclient;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Parser {
     public static State parseLevel(BufferedReader serverMessages) throws IOException {
@@ -18,8 +19,8 @@ public class Parser {
 
         // Read colors
         serverMessages.readLine(); // #colors
-        Color[] agentColors = new Color[10];
-        Color[] boxColors = new Color[26];
+        Map<Integer,Color> agentColors = new HashMap<>();
+        Map<Character,Color> boxColors = new HashMap<>();
         String line = serverMessages.readLine();
         while (!line.startsWith("#"))
         {
@@ -31,11 +32,11 @@ public class Parser {
                 char c = entity.strip().charAt(0);
                 if ('0' <= c && c <= '9')
                 {
-                    agentColors[c - '0'] = color;
+                    agentColors.put(c - '0', color);
                 }
                 else if ('A' <= c && c <= 'Z')
                 {
-                    boxColors[c - 'A'] = color;
+                    boxColors.put(c, color);
                 }
             }
             line = serverMessages.readLine();
@@ -55,8 +56,8 @@ public class Parser {
             line = serverMessages.readLine();
         }
         int numAgents = 0;
-        int[] agentRows = new int[10];
-        int[] agentCols = new int[10];
+        Map<Integer,Integer> agentRows = new HashMap<>();
+        Map<Integer,Integer> agentCols = new HashMap<>();
         boolean[][] walls = new boolean[numRows][numCols];
         char[][] boxes = new char[numRows][numCols];
         for (int row = 0; row < numRows; ++row)
@@ -68,8 +69,8 @@ public class Parser {
 
                 if ('0' <= c && c <= '9')
                 {
-                    agentRows[c - '0'] = row;
-                    agentCols[c - '0'] = col;
+                    agentRows.put(c - '0', row);
+                    agentCols.put(c - '0', col);
                     ++numAgents;
                 }
                 else if ('A' <= c && c <= 'Z')
@@ -82,8 +83,8 @@ public class Parser {
                 }
             }
         }
-        agentRows = Arrays.copyOf(agentRows, numAgents);
-        agentCols = Arrays.copyOf(agentCols, numAgents);
+        agentRows = new HashMap<>(agentRows);
+        agentCols = new HashMap<>(agentCols);
 
         // Read goal state
         // line is currently "#goal"

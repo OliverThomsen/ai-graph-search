@@ -1,9 +1,6 @@
 package searchclient;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Random;
+import java.util.*;
 
 public class State
 {
@@ -13,9 +10,9 @@ public class State
         The agent rows, columns, and colors are indexed by the agent number.
         For example, this.agentRows[0] is the row location of agent '0'.
     */
-    public int[] agentRows;
-    public int[] agentCols;
-    public Color[] agentColors;
+    public Map<Integer,Integer> agentRows;
+    public Map<Integer,Integer> agentCols;
+    public Map<Integer,Color> agentColors;
 
     /*
         The walls, boxes, and goals arrays are indexed from the top-left of the level, row-major order (row, col).
@@ -36,7 +33,7 @@ public class State
         The box colors are indexed alphabetically. So this.boxColors[0] is the color of A boxes, 
         this.boxColor[1] is the color of B boxes, etc.
     */
-    public Color[] boxColors;
+    public Map<Character,Color> boxColors;
  
     public final State parent;
     public final Action[] jointAction;
@@ -47,10 +44,10 @@ public class State
 
     // Constructs copy of state
     public State(State state) {
-        this.boxColors = Arrays.copyOf(state.boxColors, state.boxColors.length);
-        this.agentColors = Arrays.copyOf(state.agentColors, state.agentColors.length);
-        this.agentRows = Arrays.copyOf(state.agentRows, state.agentRows.length);
-        this.agentCols = Arrays.copyOf(state.agentCols, state.agentCols.length);
+        this.boxColors = new HashMap<>(state.boxColors);
+        this.agentColors = new HashMap<>(state.agentColors);
+        this.agentRows = new HashMap<>(state.agentRows);
+        this.agentCols = new HashMap<>(state.agentCols);
         this.boxes = new char[state.boxes.length][];
         this.walls = new boolean[state.walls.length][];
         this.goals = new char[state.goals.length][];
@@ -69,8 +66,8 @@ public class State
 
     // Constructs an initial state.
     // Arguments are not copied, and therefore should not be modified after being passed in.
-    public State(int[] agentRows, int[] agentCols, Color[] agentColors, boolean[][] walls,
-                 char[][] boxes, Color[] boxColors, char[][] goals
+    public State(Map<Integer,Integer> agentRows, Map<Integer,Integer> agentCols, Map<Integer,Color> agentColors, boolean[][] walls,
+                 char[][] boxes, Map<Character,Color> boxColors, char[][] goals
     )
     {
         this.boxColors = boxColors;
@@ -91,10 +88,10 @@ public class State
     public State(State parent, Action[] jointAction)
     {
         // Copy parent
-        this.boxColors = Arrays.copyOf(parent.boxColors, parent.boxColors.length);
-        this.agentColors = Arrays.copyOf(parent.agentColors, parent.agentColors.length);
-        this.agentRows = Arrays.copyOf(parent.agentRows, parent.agentRows.length);
-        this.agentCols = Arrays.copyOf(parent.agentCols, parent.agentCols.length);
+        this.boxColors = new HashMap<>(parent.boxColors);
+        this.agentColors = new HashMap<>(parent.agentColors);
+        this.agentRows = new HashMap<>(parent.agentRows);
+        this.agentCols = new HashMap<>(parent.agentCols);
         this.boxes = new char[parent.boxes.length][];
         this.walls = new boolean[parent.walls.length][];
         this.goals = new char[parent.goals.length][];
@@ -111,7 +108,7 @@ public class State
         this.g = parent.g + 1;
 
         // Apply each action
-        int numAgents = this.agentRows.length;
+        int numAgents = this.agentRows.size();
         for (int agent = 0; agent < numAgents; ++agent)
         {
             Action action = jointAction[agent];
@@ -123,29 +120,29 @@ public class State
                     break;
 
                 case Move:
-                    this.agentRows[agent] += action.agentRowDelta;
-                    this.agentCols[agent] += action.agentColDelta;
+                    this.agentRows.computeIfPresent(agent, (k,val) -> val += action.agentRowDelta);
+                    this.agentCols.computeIfPresent(agent, (k,val) -> val += action.agentColDelta);
                     break;
 
                 case Push:
-                    this.agentRows[agent] += action.agentRowDelta;
-                    this.agentCols[agent] += action.agentColDelta;
-                    int prevBoxRow = this.agentRows[agent];
-                    int prevBoxCol = this.agentCols[agent];
-                    int destBoxRow = this.agentRows[agent] + action.boxRowDelta;
-                    int destBoxCol = this.agentCols[agent] + action.boxColDelta;
+                    this.agentRows.computeIfPresent(agent, (k,val) -> val += action.agentRowDelta);
+                    this.agentCols.computeIfPresent(agent, (k,val) -> val += action.agentColDelta);
+                    int prevBoxRow = this.agentRows.get(agent);
+                    int prevBoxCol = this.agentCols.get(agent);
+                    int destBoxRow = this.agentRows.get(agent) + action.boxRowDelta;
+                    int destBoxCol = this.agentCols.get(agent) + action.boxColDelta;
                     box = this.boxes[prevBoxRow][prevBoxCol];
                     this.boxes[prevBoxRow][prevBoxCol] = 0;
                     this.boxes[destBoxRow][destBoxCol] = box;
                     break;
 
                 case Pull:
-                    prevBoxRow = this.agentRows[agent] - action.boxRowDelta;
-                    prevBoxCol = this.agentCols[agent] - action.boxColDelta;
-                    destBoxRow = this.agentRows[agent];
-                    destBoxCol = this.agentCols[agent];
-                    this.agentRows[agent] += action.agentRowDelta;
-                    this.agentCols[agent] += action.agentColDelta;
+                    prevBoxRow = this.agentRows.get(agent) - action.boxRowDelta;
+                    prevBoxCol = this.agentCols.get(agent) - action.boxColDelta;
+                    destBoxRow = this.agentRows.get(agent);
+                    destBoxCol = this.agentCols.get(agent);
+                    this.agentRows.computeIfPresent(agent,(k,val) -> val += action.agentRowDelta);
+                    this.agentCols.computeIfPresent(agent,(k,val) -> val += action.agentColDelta);
                     box = this.boxes[prevBoxRow][prevBoxCol];
                     this.boxes[prevBoxRow][prevBoxCol] = 0;
                     this.boxes[destBoxRow][destBoxCol] = box;
@@ -171,7 +168,7 @@ public class State
                     return false;
                 }
                 else if ('0' <= goal && goal <= '9' &&
-                         !(this.agentRows[goal - '0'] == row && this.agentCols[goal - '0'] == col))
+                         !(this.agentRows.get(goal - '0') == row && this.agentCols.get(goal - '0') == col))
                 {
                     return false;
                 }
@@ -182,7 +179,7 @@ public class State
 
     public ArrayList<State> getExpandedStates()
     {
-        int numAgents = this.agentRows.length;
+        int numAgents = this.agentRows.size();
 
         // Determine list of applicable actions for each individual agent.
         Action[][] applicableActions = new Action[numAgents][];
@@ -247,9 +244,9 @@ public class State
 
     public boolean isApplicable(int agent, Action action)
     {
-        int agentRow = this.agentRows[agent];
-        int agentCol = this.agentCols[agent];
-        Color agentColor = this.agentColors[agent];
+        int agentRow = this.agentRows.get(agent);
+        int agentCol = this.agentCols.get(agent);
+        Color agentColor = this.agentColors.get(agent);
         int boxRow;
         int boxCol;
         char box;
@@ -274,7 +271,7 @@ public class State
                 box = boxes[destRowAgent][destColAgent];
                 if (box != 0) {
                     // check if the box destination is free and box has same color as agent
-                    boolean sameColor = this.boxColors[box - 'A'] == agentColor;
+                    boolean sameColor = this.boxColors.get(box) == agentColor;
                     destRowBox = destRowAgent + action.boxRowDelta;
                     destColBox = destColAgent + action.boxColDelta;
                     return this.cellIsFree(destRowBox, destColBox) && sameColor;
@@ -288,7 +285,7 @@ public class State
                 box = boxes[boxRow][boxCol];
                 if (box != 0) {
                     // Check if agent destination is free and agent has same color as box
-                    boolean sameColor = this.boxColors[box - 'A'] == agentColor;
+                    boolean sameColor = this.boxColors.get(box) == agentColor;
                     destRowAgent = agentRow + action.agentRowDelta;
                     destColAgent = agentCol + action.agentColDelta;
                     return this.cellIsFree(destRowAgent, destColAgent) && sameColor;
@@ -302,7 +299,7 @@ public class State
 
     public int[] conflictingAgents(Action[] jointAction)
     {
-        int numAgents = this.agentRows.length;
+        int numAgents = this.agentRows.size();
 
         int[] agentRows = new int[numAgents]; // row of new cell to become occupied by action
         int[] agentCols = new int[numAgents]; // column of new cell to become occupied by action
@@ -314,8 +311,8 @@ public class State
         for (int agent = 0; agent < numAgents; ++agent)
         {
             Action action = jointAction[agent];
-            int agentRow = this.agentRows[agent];
-            int agentCol = this.agentCols[agent];
+            int agentRow = this.agentRows.get(agent);
+            int agentCol = this.agentCols.get(agent);
 
             switch (action.type)
             {
@@ -407,9 +404,9 @@ public class State
 
     private char agentAt(int row, int col)
     {
-        for (int i = 0; i < this.agentRows.length; i++)
+        for (int i = 0; i < this.agentRows.size(); i++)
         {
-            if (this.agentRows[i] == row && this.agentCols[i] == col)
+            if (this.agentRows.get(i) == row && this.agentCols.get(i) == col)
             {
                 return (char) ('0' + i);
             }
@@ -436,12 +433,12 @@ public class State
         {
             final int prime = 31;
             int result = 1;
-            result = prime * result + Arrays.hashCode(this.agentColors);
-            result = prime * result + Arrays.hashCode(this.boxColors);
+            result = prime * result + this.agentColors.hashCode();
+            result = prime * result + this.boxColors.hashCode();
             result = prime * result + Arrays.deepHashCode(this.walls);
             result = prime * result + Arrays.deepHashCode(this.goals);
-            result = prime * result + Arrays.hashCode(this.agentRows);
-            result = prime * result + Arrays.hashCode(this.agentCols);
+            result = prime * result + this.agentRows.hashCode();
+            result = prime * result + this.agentCols.hashCode();
             for (int row = 0; row < this.boxes.length; ++row)
             {
                 for (int col = 0; col < this.boxes[row].length; ++col)
@@ -474,12 +471,12 @@ public class State
             return false;
         }
         State other = (State) obj;
-        return Arrays.equals(this.agentRows, other.agentRows) &&
-               Arrays.equals(this.agentCols, other.agentCols) &&
-               Arrays.equals(this.agentColors, other.agentColors) &&
+        return this.agentRows.equals(other.agentRows) &&
+               this.agentCols.equals(other.agentCols) &&
+               this.agentColors.equals(other.agentColors) &&
                Arrays.deepEquals(this.walls, other.walls) &&
                Arrays.deepEquals(this.boxes, other.boxes) &&
-               Arrays.equals(this.boxColors, other.boxColors) &&
+               this.boxColors.equals(other.boxColors) &&
                Arrays.deepEquals(this.goals, other.goals);
     }
 

@@ -6,7 +6,7 @@ import java.util.HashSet;
 
 public class GraphSearch {
 
-    public static AgentState search(AgentState initialState, Frontier frontier)
+    public static AgentState search(AgentState initialState, Frontier frontier, SubGoal subGoal)
     {
         int iterations = 0;
 
@@ -31,8 +31,8 @@ public class GraphSearch {
                 System.err.println(currentState.toString());
             }
 
-            // if the node contains a goal state then return the corresponding solution
-            if (currentState.isGoalState()) {
+            // if the sub subGoal is completed then return the corresponding solution
+            if (subGoal.completed(currentState)) {
                 printSearchStatus(explored,frontier);
                 return currentState;
             }

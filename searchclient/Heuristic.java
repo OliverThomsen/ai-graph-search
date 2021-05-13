@@ -19,16 +19,16 @@ public abstract class Heuristic implements Comparator<AgentState> {
 
         switch (subGoal.type) {
             case GET_TO_BOX:
-                cost += calculator.GetToBox(s.row, s.col, subGoal.goalrow, subGoal.goalcol);
+                cost += calculator.GetToBox(s.row, s.col, subGoal.row, subGoal.col);
 
             case PUSH_BOX_TO_GOAL:
-                cost += calculator.PushBoxToGoal(s.boxes, s.row, s.col, subGoal.goalrow, subGoal.goalcol, subGoal.box);
+                cost += calculator.PushBoxToGoal(s.boxes, s.row, s.col, subGoal.row, subGoal.col, subGoal.character);
 
             case GET_TO_COORDINATE:
-                cost += calculator.GetToCoordinate(s.row, s.col, subGoal.goalrow, subGoal.goalcol);
+                cost += calculator.GetToCoordinate(s.row, s.col, subGoal.row, subGoal.col);
 
             case MOVE_BOX_TO_HELP:
-                cost += calculator.MoveBoxToHelp(s.row, s.col, subGoal.goalrow, subGoal.goalcol);
+                cost += calculator.MoveBoxToHelp(s.row, s.col, subGoal.row, subGoal.col);
 
             default:
                 cost += Integer.MAX_VALUE;
@@ -70,11 +70,4 @@ class HeuristicGreedy
 
 
 }
-class SubGoal{
-    int goalrow;
-    int goalcol;
-    SubGoalType type;
-    char box;
 
-
-}

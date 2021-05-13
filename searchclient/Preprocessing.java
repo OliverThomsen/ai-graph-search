@@ -9,7 +9,7 @@ public class Preprocessing {
         //instantiate the new map used to reference how far away the agent is for any point on the map
         referenceMap = new Integer[initialState.walls.length][initialState.walls[0].length];
 
-        frontier.add(new PreState(initialState.agentRows[0], initialState.agentCols[0], 0));
+        frontier.add(new PreState(initialState.agentRows.get(0), initialState.agentCols.get(0), 0));
 
         while (!frontier.isEmpty()) {
 
@@ -28,7 +28,7 @@ public class Preprocessing {
                 // only if not in the frontier or explored set
                 if (prestate.x() >= 0 && prestate.y() >= 0 &&
                         prestate.x() < referenceMap.length && prestate.y() < referenceMap[0].length) {
-                    if (referenceMap[prestate.x()][prestate.y()] == null && initialState.walls[prestate.x()][prestate.y()] == false
+                    if (referenceMap[prestate.x()][prestate.y()] == null && !initialState.walls[prestate.x()][prestate.y()]
                     && !frontier.contains(prestate)) {
                         frontier.add(prestate);
                     }
