@@ -141,7 +141,7 @@ public class AgentState {
     public ArrayList<AgentState> getExpandedStates() {
         ArrayList<Action> applicableActions = new ArrayList<>(Action.values().length);
         for (Action action : Action.values()) {
-            if (this.isApplicable(action)) {
+            if (this.conflictingCell(action) == null) {
                 applicableActions.add(action);
             }
         }
@@ -152,7 +152,7 @@ public class AgentState {
         return expandedStates;
     }
 
-    public boolean isApplicable(Action action) {
+    public int[] conflictingCell(Action action) {
         int agentDestRow, agentDestCol;
         int boxDestRow, boxDestCol;
         int boxRow, boxCol;
@@ -160,11 +160,12 @@ public class AgentState {
 
         switch (action.type) {
             case NoOp:
-                return true;
+                return null;
             case Move:
                 agentDestRow = this.row + action.agentRowDelta;
                 agentDestCol = this.col + action.agentColDelta;
-                return this.cellIsFree(agentDestRow, agentDestCol);
+                return this.cellIsFree(agentDestRow, agentDestCol) ? null : new int[]{agentDestRow, agentDestCol};
+
             case Push:
                 agentDestRow = this.row + action.agentRowDelta;
                 agentDestCol = this.col + action.agentColDelta;
@@ -174,9 +175,9 @@ public class AgentState {
                     // check if box destination is free
                     boxDestRow = agentDestRow + action.boxRowDelta;
                     boxDestCol = agentDestCol + action.boxColDelta;
-                    return this.cellIsFree(boxDestRow, boxDestCol);
+                    return this.cellIsFree(boxDestRow, boxDestCol) ? null : new int[]{boxDestRow, boxDestCol};
                 }
-                return false;
+                return new int[]{-1, -1};
             case Pull:
                 // Check if there is a box to pull
                 boxRow = this.row - action.boxRowDelta;
@@ -186,11 +187,11 @@ public class AgentState {
                     // Check if agent destination is free
                     agentDestRow = row + action.agentRowDelta;
                     agentDestCol = col + action.agentColDelta;
-                    return this.cellIsFree(agentDestRow, agentDestCol);
+                    return this.cellIsFree(agentDestRow, agentDestCol) ? null : new int[]{agentDestRow,agentDestCol};
                 }
-                return false;
+                return  new int[]{-1, -1};
         }
-        return false;
+        return new int[]{-1, -1};
     }
 
     private boolean cellIsFree(int row, int col) {

@@ -140,7 +140,7 @@ public abstract class Heuristic implements Comparator<AgentState> {
 class HeuristicGreedy
         extends Heuristic
 {
-    public HeuristicGreedy(AgentState initialState, Integer[][] referenceMap)
+    public HeuristicGreedy(AgentState initialState, Integer[][] referenceMap, SubGoal goal)
     {
         super(initialState, referenceMap);
     }
