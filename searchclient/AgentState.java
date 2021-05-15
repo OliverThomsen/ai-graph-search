@@ -3,7 +3,7 @@ package searchclient;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class AgentState {
+public class AgentState extends SuperState{
     public int row, col;
     public Color color;
     public char agent;
@@ -17,6 +17,7 @@ public class AgentState {
 
     // Initial agent state
     public AgentState(int row, int col, Color color, char agent, boolean[][] walls, char[][] boxes, char[][] goals) {
+        super(row,col,boxes);
         this.color = color;
         this.agent = agent;
         this.walls = walls;
@@ -32,6 +33,7 @@ public class AgentState {
     // Construct state from applied action
     public AgentState(AgentState parentState, Action action) {
         // Copy parent
+        super(parentState,action);
         this.color = parentState.color;
         this.agent = parentState.agent;
         this.walls = clone(parentState.walls);
@@ -82,10 +84,12 @@ public class AgentState {
                 this.boxes[prevBoxRow][prevBoxCol] = 0;
                 this.boxes[destBoxRow][destBoxCol] = box;
         }
+
     }
 
     // Constructs copy of state
     public AgentState(AgentState state) {
+        super(state.row,state.col,state.boxes);
         this.color = state.color;
         this.agent = state.agent;
         this.walls = clone(state.walls);
@@ -96,6 +100,7 @@ public class AgentState {
         this.parent = null;
         this.action = null;
         this.g = 0;
+
     }
 
     public Action[] extractPlan() {

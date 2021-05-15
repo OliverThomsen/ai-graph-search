@@ -4,8 +4,8 @@ import java.util.*;
 
 public interface Frontier
 {
-    void add(AgentState state);
-    AgentState pop();
+    void add(SuperState state);
+    SuperState pop();
     boolean isEmpty();
     int size();
     boolean contains(AgentState state);
@@ -15,26 +15,26 @@ public interface Frontier
 class FrontierBestFirst
         implements Frontier {
     private Heuristic heuristic;
-    private final HashSet<AgentState> set = new HashSet<>(65536);
-    private final PriorityQueue<AgentState> priorityQueue;
+    private final HashSet<SuperState> set = new HashSet<>(65536);
+    private final PriorityQueue<SuperState> priorityQueue;
 
 
     public FrontierBestFirst(Heuristic h) {
         this.heuristic = h;
-        priorityQueue = new PriorityQueue<>(65536, heuristic);
+        priorityQueue = new PriorityQueue<SuperState>(65536, heuristic);
     }
 
     @Override
-    public void add(AgentState state)
+    public void add(SuperState state)
     {
         priorityQueue.add(state);
         this.set.add(state);
     }
 
     @Override
-    public AgentState pop()
+    public SuperState pop()
     {
-        AgentState state = this.priorityQueue.poll();
+        SuperState state = this.priorityQueue.poll();
         this.set.remove(state);
         return state;
     }

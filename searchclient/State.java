@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Random;
 
-public class State
+public class State extends SuperState
 {
     private static final Random RNG = new Random(1);
 
@@ -47,6 +47,7 @@ public class State
 
     // Constructs copy of state
     public State(State state) {
+        super(state.agentRows,state.agentCols,state.boxes);
         this.boxColors = Arrays.copyOf(state.boxColors, state.boxColors.length);
         this.agentColors = Arrays.copyOf(state.agentColors, state.agentColors.length);
         this.agentRows = Arrays.copyOf(state.agentRows, state.agentRows.length);
@@ -73,6 +74,7 @@ public class State
                  char[][] boxes, Color[] boxColors, char[][] goals
     )
     {
+        super(agentRows,agentCols,boxes);
         this.boxColors = boxColors;
         this.agentColors = agentColors;
         this.agentRows = agentRows;
@@ -90,6 +92,7 @@ public class State
     // Precondition: Joint action must be applicable and non-conflicting in parent state.
     public State(State parent, Action[] jointAction)
     {
+        super(parent,jointAction);
         // Copy parent
         this.boxColors = Arrays.copyOf(parent.boxColors, parent.boxColors.length);
         this.agentColors = Arrays.copyOf(parent.agentColors, parent.agentColors.length);
