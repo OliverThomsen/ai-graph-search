@@ -43,7 +43,7 @@ public class SearchClient {
     // for ech agent new AgentSearch(agentState)
 
     static void findPartialAgentPlans() {
-        SubGoal[] subGoals = new SubGoal[3];
+        SubGoal subGoal = new SubGoal();
         int agentIndex = 0;
         while(agentIndex < originalState.agentRows.length) {
             AgentState agentState = extractAgentState(originalState, agentIndex);
@@ -63,7 +63,7 @@ public class SearchClient {
             }
 
             try {
-                Frontier frontier = new FrontierBestFirst(new HeuristicGreedy(agentState,referenceMap,subGoals));
+                Frontier frontier = new FrontierBestFirst(new HeuristicGreedy(referenceMap,subGoal));
                 agentState = search(agentState, frontier);
             } catch (OutOfMemoryError err) {
                 System.err.println("Max memory usage exceeded");

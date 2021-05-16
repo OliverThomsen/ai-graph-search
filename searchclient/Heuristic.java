@@ -1,56 +1,49 @@
 package searchclient;
 
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
-public abstract class Heuristic implements Comparator<SuperState> {
+public abstract class Heuristic implements Comparator<AgentState> {
     private CostCalculator calculator;
-    private SubGoal[] subGoals;
+    private SubGoal subGoal;
 
-    public Heuristic(Integer[][] referenceMap, SubGoal[] subGoals)
+    public Heuristic(Integer[][] referenceMap, SubGoal subGoal)
     {
 
-        this.subGoals = subGoals;
+        this.subGoal = subGoal;
         // Here's a chance to pre-process the static parts of the level.
         this.calculator = new CostCalculator(referenceMap);
     }
 
-    public int h(SuperState s) {
+    public int h(AgentState s) {
         int cost = 0;
-        for (SubGoal subgoal: subGoals) {
 
+        switch (subGoal.type) {
+            case GET_TO_BOX:
+                cost += calculator.GetToBox(s.row, s.col, subGoal.goalrow, subGoal.goalcol);
 
-            switch (subgoal.type) {
-                case GET_TO_BOX:
-                    cost += calculator.GetToBox(s.agentRows[0], s.agentCols[0], subgoal.goalrow, subgoal.goalcol);
+            case PUSH_BOX_TO_GOAL:
+                cost += calculator.PushBoxToGoal(s.boxes, s.row, s.col, subGoal.goalrow, subGoal.goalcol, subGoal.box);
 
-                case PUSH_BOX_TO_GOAL:
-                    cost += calculator.PushBoxToGoal(s.boxes, s.agentRows[0], s.agentCols[0], subgoal.goalrow, subgoal.goalcol, subgoal.box);
+            case GET_TO_COORDINATE:
+                cost += calculator.GetToCoordinate(s.row, s.col, subGoal.goalrow, subGoal.goalcol);
 
-                case GET_TO_COORDINATE:
-                    cost += calculator.GetToCoordinate(s.agentRows[0], s.agentCols[0], subgoal.goalrow, subgoal.goalcol);
+            case MOVE_BOX_TO_HELP:
+                cost += calculator.MoveBoxToHelp(s.row, s.col, subGoal.goalrow, subGoal.goalcol);
 
-                case MOVE_BOX_TO_HELP:
-                    cost += calculator.MoveBoxToHelp(s.agentRows[0], s.agentCols[0], subgoal.goalrow, subgoal.goalcol);
-
-                default:
-                    cost += Integer.MAX_VALUE;
-
-
-            }
+            default:
+                cost += Integer.MAX_VALUE;
         }
+
         return cost;
 
     }
 
-    public abstract int f(SuperState superState);
+    public abstract int f(AgentState superState);
 
 
 
     @Override
-    public int compare(SuperState s1, SuperState s2)
+    public int compare(AgentState s1, AgentState s2)
     {
         return this.f(s1) - this.f(s2);
     }
@@ -60,13 +53,13 @@ public abstract class Heuristic implements Comparator<SuperState> {
 class HeuristicGreedy
         extends Heuristic
 {
-    public HeuristicGreedy(SuperState initialState, Integer[][] referenceMap, SubGoal[] subGoals)
+    public HeuristicGreedy(Integer[][] referenceMap, SubGoal subGoal)
     {
-        super(referenceMap, subGoals);
+        super(referenceMap, subGoal);
     }
 
     @Override
-    public int f(SuperState s) {
+    public int f(AgentState s) {
         return this.h(s);
     }
 
