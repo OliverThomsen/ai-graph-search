@@ -1,28 +1,14 @@
 package searchclient;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
 public class CostCalculator {
     private Integer[][] referenceMap;
-    private Map<Character,Integer[]> goalCoordinates;
 
     public CostCalculator(Integer[][] referenceMap){
         this.referenceMap = referenceMap;
     }
 
-
     public int GetToBox(int agentRow, int agentCol, int goalRow, int goalCol){
-        int referenceLengthfromgoal = Math.abs(referenceMap[agentRow][agentCol]-referenceMap[goalRow][goalCol]);
-        int rowdiff = Math.abs(agentRow - goalRow);
-        int coldiff = Math.abs(agentCol - goalCol);
-        int manhLength = rowdiff + coldiff;
-        int maxLengthfromgoal = Math.max(referenceLengthfromgoal,manhLength);
-
-        return maxLengthfromgoal;
-
-
+        return distanceBetween(agentRow, agentCol, goalRow, goalCol);
     }
 
     public int PushBoxToGoal(char[][] boxes,int agentRow, int agentCol, int goalRow, int goalCol, char box){
@@ -30,62 +16,35 @@ public class CostCalculator {
         int cost = 0;
         int boxRow = 0;
         int boxCol= 0;
-        for (int i = -1; i <= 1; i++) {
-            char foundChar1 = boxes[agentRow + i][agentCol];
-            char foundChar2 = boxes[agentRow][agentCol + i];
-
-            if (foundChar1 == box) {
-                boxRow = agentRow + i;
-                boxCol = agentCol;
-                break;
+        for (int row = 0; row < boxes.length ; row++) {
+            for (int col = 0; col < boxes[0].length; col++) {
+                char boxCheck = boxes[row][col];
+                if (box == boxCheck) {
+                    boxRow = row;
+                    boxCol = col;
+                }
             }
-            if (foundChar2 == box) {
-                boxRow = agentRow;
-                boxCol = agentCol + i;
-                break;
-            }
-            i++;
         }
-
-        //calculate distance from agent to gox
-        int agentrowdiff = Math.abs(agentRow - boxRow);
-        int agentcoldiff = Math.abs(agentCol - boxCol);
-        cost += agentrowdiff + agentcoldiff;
-
+        //calculate distance from agent to box
+        cost += distanceBetween(agentRow, agentCol, boxRow, boxCol);
         //calculate distance of box to goal
-        int referenceLengthfromgoal = Math.abs(referenceMap[boxRow][boxCol]-referenceMap[goalRow][goalCol]);
-        int boxrowdiff = Math.abs(boxRow - goalRow);
-        int boxcoldiff = Math.abs(boxCol - goalCol);
-        int manhLength = boxrowdiff + boxcoldiff;
-        int maxLengthfromgoal = Math.max(referenceLengthfromgoal,manhLength);
-
-        return cost += maxLengthfromgoal;
-
-
+        return cost += distanceBetween(boxRow, boxCol, goalRow, goalCol);
     }
 
     public int GetToCoordinate(int agentRow, int agentCol, int goalRow, int goalCol){
-        int referenceLengthfromgoal = Math.abs(referenceMap[agentRow][agentCol]-referenceMap[goalRow][goalCol]);
-        int rowdiff = Math.abs(agentRow - goalRow);
-        int coldiff = Math.abs(agentCol - goalCol);
-        int manhLength = rowdiff + coldiff;
-        int maxLengthfromgoal = Math.max(referenceLengthfromgoal,manhLength);
-
-        return maxLengthfromgoal;
-
-
+        return distanceBetween(agentRow, agentCol, goalRow, goalCol);
     }
 
     public int MoveBoxToHelp(int agentRow, int agentCol, int goalRow, int goalCol){
-        int referenceLengthfromgoal = Math.abs(referenceMap[agentRow][agentCol]-referenceMap[goalRow][goalCol]);
-        int rowdiff = Math.abs(agentRow - goalRow);
-        int coldiff = Math.abs(agentCol - goalCol);
-        int manhLength = rowdiff + coldiff;
-        int maxLengthfromgoal = Math.max(referenceLengthfromgoal,manhLength);
+        return distanceBetween(agentRow, agentCol, goalRow, goalCol);
+    }
 
-        return maxLengthfromgoal;
-
-
+    private int distanceBetween(int startRow, int startCol, int endRow, int endCol) {
+        int referenceLength = Math.abs(referenceMap[startRow][startCol]-referenceMap[endRow][endCol]);
+        int rowDiff = Math.abs(startRow - endRow);
+        int colDiff = Math.abs(startCol - endCol);
+        int manHLength = rowDiff + colDiff;
+        return Math.max(referenceLength, manHLength);
     }
 
 
