@@ -2,7 +2,7 @@ package searchclient;
 
 import java.util.*;
 
-public class State
+public class State implements SuperState
 {
     private static final Random RNG = new Random(1);
 
@@ -177,7 +177,7 @@ public class State
         return true;
     }
 
-    public ArrayList<State> getExpandedStates()
+    public ArrayList<SuperState> getExpandedStates()
     {
         int numAgents = this.agentRows.size();
 
@@ -199,7 +199,7 @@ public class State
         // Iterate over joint actions, check conflict and generate child states.
         Action[] jointAction = new Action[numAgents];
         int[] actionsPermutation = new int[numAgents];
-        ArrayList<State> expandedStates = new ArrayList<>(16);
+        ArrayList<SuperState> expandedStates = new ArrayList<>(16);
         while (true)
         {
             for (int agent = 0; agent < numAgents; ++agent)

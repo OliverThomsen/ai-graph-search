@@ -1,5 +1,8 @@
 package searchclient;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class AgentSearch {
     public AgentState mainState;
     private Integer[][] referenceMap;
@@ -12,14 +15,15 @@ public class AgentSearch {
 
     public Action[] getNextSubPLan() {
         SubGoal goal = getNextSubGoal();
-        Frontier frontier = new FrontierBestFirst(new HeuristicGreedy(referenceMap, goal));
-        mainState = GraphSearch.search(mainState, frontier, goal);
-        return mainState.extractPlan();
+        return getNextSubPLan(goal);
     }
 
     public Action[] getNextSubPLan(SubGoal goal) {
-        Frontier frontier = new FrontierBestFirst(new HeuristicGreedy(referenceMap, goal));
-        mainState = GraphSearch.search(mainState, frontier, goal);
+        Map<Integer, SubGoal> subGoal = new HashMap<>();
+        subGoal.put(mainState.agent - '0', goal);
+        Frontier frontier = new FrontierBestFirst(new HeuristicGreedy(referenceMap, subGoal));
+        mainState = (AgentState) GraphSearch.search(mainState, frontier);
+        assert mainState != null;
         return mainState.extractPlan();
     }
 

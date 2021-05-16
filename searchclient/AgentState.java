@@ -3,7 +3,7 @@ package searchclient;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class AgentState {
+public class AgentState implements SuperState{
     public int row, col;
     public Color color;
     public char agent;
@@ -138,14 +138,14 @@ public class AgentState {
         return true;
     }
 
-    public ArrayList<AgentState> getExpandedStates() {
+    public ArrayList<SuperState> getExpandedStates() {
         ArrayList<Action> applicableActions = new ArrayList<>(Action.values().length);
         for (Action action : Action.values()) {
             if (this.conflictingCell(action) == null) {
                 applicableActions.add(action);
             }
         }
-        ArrayList<AgentState> expandedStates = new ArrayList<>(16);
+        ArrayList<SuperState> expandedStates = new ArrayList<>(16);
         for (Action action : applicableActions) {
             expandedStates.add(new AgentState(this, action));
         }
