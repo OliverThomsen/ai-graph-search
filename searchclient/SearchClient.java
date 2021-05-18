@@ -93,6 +93,7 @@ public class SearchClient {
                     jointAction.put(agent, Action.NoOp);
                     // If last agent to finish executing their plan
                     if (step >= longestPlan) {
+                        saveRemainingPlans(step);
                         moreMoves = false;
                         break;
                     }

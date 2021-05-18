@@ -202,6 +202,9 @@ public class State implements SuperState
         // Iterate over joint actions, check conflict and generate child states.
         Map<Integer,Action> jointAction = new HashMap<>(numAgents);
         Map<Integer,Integer> actionsPermutation = new HashMap<>(numAgents);
+        for (Map.Entry<Integer,Integer> entry : agentRows.entrySet()) {
+            actionsPermutation.put(entry.getKey(),0);
+        }
         ArrayList<SuperState> expandedStates = new ArrayList<>(16);
         while (true)
         {
