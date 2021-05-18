@@ -3,9 +3,7 @@ package searchclient;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.ref.Reference;
 import java.nio.charset.StandardCharsets;
-import java.rmi.ServerError;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -78,8 +76,8 @@ public class SearchClient {
         int step = 0;
         int longestPlan = 0;
 
-        while (moreMoves) {
-            // make sure at least one agent still has a plan
+        while (true) {
+            // Find the longest agent plan
             for (ArrayList<Action> plan : agentPlans) {
                 longestPlan = Math.max(longestPlan, plan.size());
             }
@@ -91,11 +89,10 @@ public class SearchClient {
                 // Agent is in goal state and has no more moves
                 if (agentSearches[agent].mainState.isGoalState() && agentPlans.get(agent).size() == 0) {
                     jointAction.put(agent, Action.NoOp);
-                    // If last agent to finish executing their plan
+                    // Last agent has finish executing their plan
                     if (step >= longestPlan) {
                         saveRemainingPlans(step);
-                        moreMoves = false;
-                        break;
+                        return;
                     }
                     else continue;
                 }
@@ -103,61 +100,46 @@ public class SearchClient {
                 // Agent has no more moves
                 if (agentPlans.get(agent).size() == step) {
                     saveRemainingPlans(step); // saves the remaining plans for the other agents
-                    moreMoves = false;
-                    break;
+                   return;
                 }
 
                 jointAction.put(agent, agentPlans.get(agent).get(step));
             }
-
-            if (!moreMoves) continue;
 
             // Check if joint action is conflicting in original state
             int[] conflictingAgents = originalState.conflictingAgents(jointAction);
 
             if (conflictingAgents.length > 1) {
 
-                jointAction.forEach((key, val) -> {
-                    System.err.print(key +": "+ val+", ");
-                });
+                jointAction.forEach((key, val) -> System.err.print(key +": "+ val+", "));
                 System.err.println("");
-
                 System.err.print("conflicting agents: " );
-                for (int a : conflictingAgents) {
-                    System.err.print(a +" "+ jointAction.get(a) +"; " );
-
-                }
+                for (int a : conflictingAgents) System.err.print(a +" "+ jointAction.get(a) +"; " );
                 System.err.println(" ");
-                System.err.println(originalState);
 
-                moreMoves = false;
                 // todo: improve by giving new sub goals to agents instead of putting them in same state ex. if only one conflicting agent with a box
                 // todo: check if box is blocking or if agent can move around
                 AgentState[] conflictingStates = new AgentState[conflictingAgents.length];
                 // Save the good plan so far
                 saveRemainingPlans(step);
-                // roll back individual agent states to before conflict
                 int i = 0;
                 for (int agent : conflictingAgents) {
-                    agentSearches[agent].rollBackState(agentPlans.get(agent).size() - step);
-                    agentPlans.get(agent).clear(); // delete remaining plan after the conflict
+                    // roll back individual agent states to before conflict
+                    agentSearches[agent].rollBackState(agentPlans.get(agent).size());
+                    // delete remaining plan after the conflict
+                    agentPlans.get(agent).clear();
                     conflictingStates[i] = agentSearches[agent].mainState;
                     i++;
                 }
-
                 State conflictState = putAgentsIntoSameState(conflictingStates);
                 solveConflictingState(conflictState);
-                // reset step for net round
-                step = 0;
+                return;
             }
 
             else {
                 // Apply joint action to original state
-//                jointAction.forEach((key, val) -> {
-//                    System.err.print(key +": "+val+ ", ");
-//                });
-//                System.err.println("");
-//                System.err.println(originalState);
+                jointAction.forEach((key, val) -> System.err.print(key +": "+val+ ", "));
+                System.err.println("\n"+originalState);
                 originalState = new State(originalState, jointAction);
                 step++;
             }
@@ -178,6 +160,7 @@ public class SearchClient {
         Frontier frontier = new FrontierBestFirst(new HeuristicGreedy(referenceMaps, currentSubGoals));
         System.err.println(state);
         State searchedState = (State) GraphSearch.search(state, frontier);
+        System.err.println("Solved conflict");
         System.err.println(searchedState);
         Map<Integer, Action>[] jointActions = searchedState.extractPlan();
         for (Map<Integer, Action> jointAction : jointActions) {
@@ -244,6 +227,7 @@ public class SearchClient {
     }
 
     static void sendPlanToServer() throws IOException{
+        System.err.println("Final state");
         System.err.println(originalState);
         Map<Integer, Action>[] finalPlan = originalState.extractPlan();
         if (finalPlan.length > 0) {

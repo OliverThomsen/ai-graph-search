@@ -42,7 +42,7 @@ public class CostCalculator {
     }
 
     private int distanceBetween(int startRow, int startCol, int endRow, int endCol, int agent) {
-        int referenceLength = Math.abs(referenceMaps.get(agent)[startRow][startCol]- referenceMaps.get(agent)[endRow][endCol]);
+        int referenceLength = Math.abs(referenceMaps.get(agent)[startRow][startCol] - referenceMaps.get(agent)[endRow][endCol]);
         int rowDiff = Math.abs(startRow - endRow);
         int colDiff = Math.abs(startCol - endCol);
         int manHLength = rowDiff + colDiff;

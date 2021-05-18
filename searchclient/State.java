@@ -386,25 +386,25 @@ public class State implements SuperState
                 continue;
             }
 
+            // if agent is moving a box
+            if (boxRows.get(a1) != -1) {
+                // Agent box moving into stationary box or agent
+                char c = map[boxRows.get(a1)][boxCols.get(a1)];
+                if (c != 0) {
+                    // box moved into box
+                    if (SearchClient.isBox(c)) return new int[] {a1, getBoxOwner(c)};
+                    // box moved into agent
+                    else return new int[]{a1, c-'0'};
+                }
+            }
+
             // Agent moving into stationary box or agent
-            if (map[agentRows.get(a1)][agentCols.get(a1)] != 0) {
-                char c = map[agentRows.get(a1)][agentCols.get(a1)];
-                // moved into stationary box
-                if (SearchClient.isBox(c)) {
-                    // find agent that owns box
-                    Color agentColor = this.boxColors.get(c);
-                    for (Map.Entry<Integer,Color> entry : this.agentColors.entrySet()) {
-                        int agent = entry.getKey();
-                        Color color = entry.getValue();
-                        if (agentColor.equals(color)) {
-                            return new int[]{a1,agent};
-                        }
-                    }
-                }
-                // moved into stationary agent
-                else {
-                    return new int[] {a1, c-'0'};
-                }
+            char c = map[agentRows.get(a1)][agentCols.get(a1)];
+            if (c != 0) {
+                // agent moved into stationary box
+                if (SearchClient.isBox(c)) return new int[]{a1, getBoxOwner(c)};
+                // agent moved into stationary agent
+                else return new int[] {a1, c-'0'};
             }
 
             for (int a2 = a1 + 1; a2 < highestAgentNumber; ++a2)
@@ -453,6 +453,19 @@ public class State implements SuperState
         }
 
         return new int[0];
+    }
+
+    private int getBoxOwner(char box) {
+        int owner = -1;
+        Color agentColor = this.boxColors.get(box);
+        for (Map.Entry<Integer,Color> entry : this.agentColors.entrySet()) {
+            int agent = entry.getKey();
+            Color color = entry.getValue();
+            if (agentColor.equals(color)) {
+                owner = agent;
+            }
+        }
+        return owner;
     }
 
     private boolean cellIsFree(int row, int col)
