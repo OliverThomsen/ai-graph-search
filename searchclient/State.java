@@ -185,9 +185,10 @@ public class State implements SuperState
 
         // Determine list of applicable actions for each individual agent.
         Map<Integer,Action[]> applicableActions = new HashMap<>(numAgents);
-        for (int agent = 0; agent < numAgents; ++agent)
-        {
-            while (!agentRows.containsKey(agent)) agent++;
+
+        for (Map.Entry<Integer,Integer> entry : agentRows.entrySet()) {
+            int agent = entry.getKey();
+
             ArrayList<Action> agentActions = new ArrayList<>(Action.values().length);
             for (Action action : Action.values())
             {
@@ -208,8 +209,9 @@ public class State implements SuperState
         ArrayList<SuperState> expandedStates = new ArrayList<>(16);
         while (true)
         {
-            for (int agent = 0; agent < numAgents; ++agent) {
-                while (!agentRows.containsKey(agent)) agent++;
+
+            for (Map.Entry<Integer,Integer> entry : agentRows.entrySet()) {
+                int agent = entry.getKey();
                 int permutation = actionsPermutation.get(agent);
                 Action action = applicableActions.get(agent)[permutation];
                 jointAction.put(agent, action);
@@ -222,9 +224,15 @@ public class State implements SuperState
 
             // Advance permutation
             boolean done = false;
-            for (int agent = 0; agent < numAgents; ++agent)
-            {
-                while (!agentRows.containsKey(agent)) agent++;
+
+            int highestAgentNumber = 0;
+            for (Map.Entry<Integer,Integer> entry : agentRows.entrySet()) {
+                highestAgentNumber = Math.max(entry.getKey(), highestAgentNumber);
+            }
+
+
+            for (Map.Entry<Integer,Integer> entry : agentRows.entrySet()) {
+                int agent = entry.getKey();
                 if (actionsPermutation.get(agent) < applicableActions.get(agent).length - 1)
                 {
                     actionsPermutation.computeIfPresent(agent, (k,val) -> ++val);
@@ -233,7 +241,7 @@ public class State implements SuperState
                 else
                 {
                     actionsPermutation.put(agent, 0);
-                    if (agent == numAgents - 1)
+                    if (agent == highestAgentNumber)
                     {
                         done = true;
                     }
@@ -308,12 +316,15 @@ public class State implements SuperState
 
     public int[] conflictingAgents(Map<Integer, Action> jointAction)
     {
-        int numAgents = this.agentRows.size();
+        int highestAgentNumber = this.agentRows.size();
+        for (Map.Entry<Integer,Integer> entry : agentRows.entrySet()) {
+            highestAgentNumber = Math.max(entry.getKey(), highestAgentNumber);
+        }
 
-        Map<Integer,Integer> agentRows = new HashMap<>(numAgents); // row of new cell to become occupied by action
-        Map<Integer,Integer> agentCols = new HashMap<>(numAgents); // column of new cell to become occupied by action
-        Map<Integer,Integer> boxRows = new HashMap<>(numAgents); // current row of box moved by action
-        Map<Integer,Integer> boxCols = new HashMap<>(numAgents); // current column of box moved by action
+        Map<Integer,Integer> agentRows = new HashMap<>(highestAgentNumber); // row of new cell to become occupied by action
+        Map<Integer,Integer> agentCols = new HashMap<>(highestAgentNumber); // column of new cell to become occupied by action
+        Map<Integer,Integer> boxRows = new HashMap<>(highestAgentNumber); // current row of box moved by action
+        Map<Integer,Integer> boxCols = new HashMap<>(highestAgentNumber); // current column of box moved by action
         char[][] map = AgentState.clone(this.boxes);
 
         // Collect cells to be occupied and boxes to be moved
@@ -362,7 +373,7 @@ public class State implements SuperState
             }
         }
 
-        for (int a1 = 0; a1 < numAgents; ++a1)
+        for (int a1 = 0; a1 < highestAgentNumber; ++a1)
         {
             while (!agentRows.containsKey(a1)) a1++;
 
@@ -392,7 +403,7 @@ public class State implements SuperState
                 }
             }
 
-            for (int a2 = a1 + 1; a2 < numAgents; ++a2)
+            for (int a2 = a1 + 1; a2 < highestAgentNumber; ++a2)
             {
                 while (!agentRows.containsKey(a2)) a2++;
 
@@ -437,9 +448,8 @@ public class State implements SuperState
 
     private char agentAt(int row, int col)
     {
-        for (int i = 0; i < this.agentRows.size(); i++)
-        {
-            while (!agentRows.containsKey(i)) i++;
+        for (Map.Entry<Integer,Integer> entry : agentRows.entrySet()) {
+            int i = entry.getKey();
             if (this.agentRows.get(i) == row && this.agentCols.get(i) == col)
             {
                 return (char) ('0' + i);
