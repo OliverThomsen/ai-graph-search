@@ -108,12 +108,9 @@ public class State implements SuperState
         this.g = parent.g + 1;
 
         // Apply each action
-        int numAgents = this.agentRows.size();
-        for (int agent = 0; agent < numAgents; ++agent)
-        {
-            while (!jointAction.containsKey(agent)) agent++;
-
-            Action action = jointAction.get(agent);
+        for (Map.Entry<Integer,Action> entry : jointAction.entrySet()) {
+            int agent = entry.getKey();
+            Action action = entry.getValue();
             char box;
 
             switch (action.type)
@@ -413,12 +410,7 @@ public class State implements SuperState
             }
         }
 
-        System.err.println("applicable");
-        conflictingAgents.forEach((agent)-> System.err.print(agent+" "));
-        System.err.println(" ");
-        System.err.println("conflicting");
         Set<Integer> otherConflictingAgents = conflictingAgents(jointAction);
-        otherConflictingAgents.forEach((agent)-> System.err.print(agent+" "));
 
         conflictingAgents.addAll(otherConflictingAgents);
 
@@ -432,8 +424,6 @@ public class State implements SuperState
             highestAgentNumber = Math.max(entry.getKey(), highestAgentNumber);
         }
 
-        Map<Integer,Integer> prevAgentRows = new HashMap<>(highestAgentNumber);
-        Map<Integer,Integer> prevAgentCols = new HashMap<>(highestAgentNumber);
         Map<Integer,Integer> agentRows = new HashMap<>(highestAgentNumber); // row of new cell to become occupied by action
         Map<Integer,Integer> agentCols = new HashMap<>(highestAgentNumber); // column of new cell to become occupied by action
         Map<Integer,Integer> boxRows = new HashMap<>(highestAgentNumber); // current row of box moved by action
