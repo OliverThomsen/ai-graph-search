@@ -13,6 +13,7 @@ public class SearchClient {
     static BufferedReader serverMessages;
     static AgentSearch[] agentSearches;
     static Map<Integer, SubGoal> currentSubGoals;
+    static Set<Integer> recentConflicts = new HashSet<>();
 
     public static void main(String[] args) throws IOException {
         System.out.println("MOLILAK");
@@ -89,6 +90,7 @@ public class SearchClient {
                     // Last agent has finish executing their plan
                     if (step >= longestPlan) {
                         saveRemainingPlans(step);
+                        recentConflicts.clear();
                         return;
                     }
                     else continue;
@@ -97,17 +99,19 @@ public class SearchClient {
                 // Agent has no more moves
                 if (agentPlans.get(agent).size() == step) {
                     saveRemainingPlans(step); // saves the remaining plans for the other agents
-                   return;
+                    recentConflicts.clear();
+                    return;
                 }
 
                 jointAction.put(agent, agentPlans.get(agent).get(step));
             }
 
             // Check if joint action is conflicting in original state
-            Set<Integer> conflictingAgents = originalState.conflictingAgents(jointAction);
+            Set<Integer> conflictingAgents = originalState.allConflictingAgents(jointAction);
+
 
             if (conflictingAgents.size() > 1) {
-
+                conflictingAgents.addAll(recentConflicts);
                 jointAction.forEach((key, val) -> System.err.print(key +": "+ val+", "));
                 System.err.println("");
                 System.err.print("conflicting agents: " );
@@ -130,6 +134,7 @@ public class SearchClient {
                 }
                 State conflictState = putAgentsIntoSameState(conflictingStates);
                 solveConflictingState(conflictState);
+                recentConflicts.addAll(conflictingAgents);
                 return;
             }
 
@@ -165,7 +170,11 @@ public class SearchClient {
                 int agent = entry.getKey();
                 Action action = entry.getValue();
                 agentPlans.get(agent).add(action);
+                System.err.println("apply action to agent state");
+                System.err.println(agentSearches[agent].mainState);
+                System.err.println(agent +": "+action);
                 agentSearches[agent].applyAction(action);
+                System.err.println(agentSearches[agent].mainState);
             }
         }
     }
