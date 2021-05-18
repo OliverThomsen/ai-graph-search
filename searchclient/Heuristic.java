@@ -26,16 +26,16 @@ public abstract class Heuristic implements Comparator<SuperState> {
             switch (subGoal.type) {
                 case GET_TO_BOX:
                     cost += calculator.GetToBox(state.row, state.col, subGoal.row, subGoal.col);
-
+                    break;
                 case PUSH_BOX_TO_GOAL:
                     cost += calculator.PushBoxToGoal(state.boxes, state.row, state.col, subGoal.row, subGoal.col, subGoal.character);
-
+                    break;
                 case GET_TO_COORDINATE:
                     cost += calculator.GetToCoordinate(state.row, state.col, subGoal.row, subGoal.col);
-
+                    break;
                 case MOVE_BOX_TO_HELP:
                     cost += calculator.MoveBoxToHelp(state.row, state.col, subGoal.row, subGoal.col);
-
+                    break;
                 default:
                     cost += Integer.MAX_VALUE;
             }
@@ -50,16 +50,16 @@ public abstract class Heuristic implements Comparator<SuperState> {
                 switch (subGoal.type) {
                     case GET_TO_BOX:
                         cost += calculator.GetToBox(state.agentRows.get(a), state.agentCols.get(a), subGoal.row, subGoal.col);
-
+                        break;
                     case PUSH_BOX_TO_GOAL:
                         cost += calculator.PushBoxToGoal(state.boxes, state.agentRows.get(a), state.agentCols.get(a), subGoal.row, subGoal.col, subGoal.character);
-
+                        break;
                     case GET_TO_COORDINATE:
                         cost += calculator.GetToCoordinate(state.agentRows.get(a), state.agentCols.get(a), subGoal.row, subGoal.col);
-
+                        break;
                     case MOVE_BOX_TO_HELP:
                         cost += calculator.MoveBoxToHelp(state.agentRows.get(a), state.agentCols.get(a), subGoal.row, subGoal.col);
-
+                        break;
                     default:
                         cost += Integer.MAX_VALUE;
                 }

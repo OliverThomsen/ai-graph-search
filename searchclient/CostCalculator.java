@@ -1,5 +1,7 @@
 package searchclient;
 
+import java.util.ArrayList;
+
 public class CostCalculator {
     private Integer[][] referenceMap;
 
@@ -46,6 +48,18 @@ public class CostCalculator {
         int manHLength = rowDiff + colDiff;
         return Math.max(referenceLength, manHLength);
     }
+
+//    public int boxGoalPennalty(ArrayList<Character> goalBoxes, char[][] boxes) {
+//        for (int row = 0; row < boxes.length ; row++) {
+//            for (int col = 0; col < boxes[0].length; col++) {
+//                char box = boxes[row][col];
+//                if (goalBoxes.contains(box)) {
+//                    distanceBetween()
+//                }
+//            }
+//        }
+//
+//    }
 
 
 //    public int Overall_Agent_Cost(State s) {

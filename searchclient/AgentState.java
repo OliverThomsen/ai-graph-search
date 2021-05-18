@@ -12,7 +12,7 @@ public class AgentState implements SuperState{
     public char[][] goals;
     public AgentState parent;
     public Action action;
-    private final int g;
+    public int g;
     private int hash;
 
     // Initial agent state

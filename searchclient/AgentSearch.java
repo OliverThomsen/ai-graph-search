@@ -1,26 +1,24 @@
 package searchclient;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 public class AgentSearch {
     public AgentState mainState;
     private Integer[][] referenceMap;
+    private Preprocessing preprocessing;
 
-
-    public AgentSearch(AgentState state, Integer[][] referenceMap) {
+    public AgentSearch(AgentState state) {
         this.mainState = state;
-        this.referenceMap = referenceMap;
-    }
-
-    public Action[] getNextSubPLan() {
-        SubGoal goal = getNextSubGoal();
-        return getNextSubPLan(goal);
     }
 
     public Action[] getNextSubPLan(SubGoal goal) {
         Map<Integer, SubGoal> subGoal = new HashMap<>();
         subGoal.put(mainState.agent - '0', goal);
+        preprocessing = new Preprocessing(mainState, goal);
+        referenceMap = preprocessing.getReferenceMap();
+        System.err.println();
         Frontier frontier = new FrontierBestFirst(new HeuristicGreedy(referenceMap, subGoal));
         mainState = (AgentState) GraphSearch.search(mainState, frontier);
         assert mainState != null;
@@ -33,20 +31,46 @@ public class AgentSearch {
         }
     }
 
-    private SubGoal getNextSubGoal() {
+    public SubGoal getNextSubGoal() {
+        ArrayList<Character> goalBoxes = new ArrayList<>();
+        for (int row = 0; row < mainState.boxes.length; row++) {
+            for (int col = 0; col < mainState.boxes[0].length; col++) {
+                char box = mainState.boxes[row][col];
+                if (SearchClient.isBox(box)) {
+                    if (mainState.goals[row][col] == box) {
+                        goalBoxes.add(box);
+                    }
+                }
+            }
+        }
+
+
         // Look for a box next to the agent
         char boxNextTo = 0;
+        int boxNextToRow = -1;
+        int boxNextToCol = -1;
+
         int[][] coordinates = new int[][]{{-1,0},{1,0},{0,-1},{0,1}};
         for (int[] c : coordinates) {
-            char box = mainState.boxes[mainState.row+c[0]][mainState.col+c[1]];
-            if (SearchClient.isBox(box)) boxNextTo = box;
+            int boxRow = mainState.row+c[0];
+            int boxCol = mainState.col+c[1];
+            char box = mainState.boxes[boxRow][boxCol];
+            if (SearchClient.isBox(box)) {
+                boxNextTo = box;
+                boxNextToRow = boxRow;
+                boxNextToCol = boxCol;
+            }
         }
         if (boxNextTo != 0) {
             for (int row = 0; row < mainState.goals.length; row++) {
                 for (int col = 0; col < mainState.goals[0].length; col++) {
                     char goal = mainState.goals[row][col];
+                    // if goal belongs to box
                     if (goal == boxNextTo) {
-                        return new SubGoal(row, col, boxNextTo, SubGoalType.PUSH_BOX_TO_GOAL);
+                        // if not already on goals
+                        if (!(row == boxNextToRow && col == boxNextToCol)) {
+                            return new SubGoal(row, col, boxNextTo, SubGoalType.PUSH_BOX_TO_GOAL, goalBoxes);
+                        }
                     }
                 }
             }
@@ -57,11 +81,15 @@ public class AgentSearch {
             for (int col = 0; col < mainState.boxes[0].length; col++) {
                 char lonelyBox = mainState.boxes[row][col];
                 if (SearchClient.isBox(lonelyBox) && mainState.goals[row][col] != lonelyBox) {
-                    return new SubGoal(row, col, lonelyBox, SubGoalType.GET_TO_BOX);
+                    return new SubGoal(row, col, lonelyBox, SubGoalType.GET_TO_BOX, goalBoxes);
                 }
             }
         }
         return null;
+    }
+
+    public void applyAction(Action action) {
+        this.mainState = new AgentState(this.mainState, action);
     }
 
     private AgentState getRelaxedState() {

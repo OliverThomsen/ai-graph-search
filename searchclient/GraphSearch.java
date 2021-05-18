@@ -24,7 +24,7 @@ public class GraphSearch {
 
 
             //Print a status message every 10000 iteration
-            if (++iterations % 10000 == 0) {
+            if (++iterations % 100000 == 0) {
                 printSearchStatus(explored, frontier);
                 System.err.println(currentState.toString());
             }
@@ -32,14 +32,14 @@ public class GraphSearch {
             // if the sub subGoal is completed then return the corresponding solution
             if (currentState instanceof State) {
                 State state = (State) currentState;
-                if (SubGoal.completed(state, frontier.getSubGoals())) {
+                if (SubGoal.completedFirstSubGoal(state, frontier.getSubGoals())) {
                     printSearchStatus(explored,frontier);
                     return state;
                 }
             } else if (currentState instanceof AgentState) {
                 AgentState state = (AgentState) currentState;
                 SubGoal subGoal = frontier.getSubGoals().get(state.agent - '0');
-                if (subGoal.completed(state)) {
+                if (subGoal.completedFirstSubGoal(state)) {
                     printSearchStatus(explored,frontier);
                     return state;
                 }

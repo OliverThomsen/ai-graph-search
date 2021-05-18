@@ -36,7 +36,7 @@ public class State implements SuperState
     public Map<Character,Color> boxColors;
  
     public final State parent;
-    public final Action[] jointAction;
+    public final Map<Integer, Action> jointAction;
     private final int g;
 
     private int hash = 0;
@@ -85,7 +85,7 @@ public class State implements SuperState
 
     // Constructs the state resulting from applying jointAction in parent.
     // Precondition: Joint action must be applicable and non-conflicting in parent state.
-    public State(State parent, Action[] jointAction)
+    public State(State parent, Map<Integer, Action> jointAction)
     {
         // Copy parent
         this.boxColors = new HashMap<>(parent.boxColors);
@@ -104,14 +104,16 @@ public class State implements SuperState
 
         // Set own parameters
         this.parent = parent;
-        this.jointAction = Arrays.copyOf(jointAction, jointAction.length);
+        this.jointAction = new HashMap<>(jointAction);
         this.g = parent.g + 1;
 
         // Apply each action
         int numAgents = this.agentRows.size();
         for (int agent = 0; agent < numAgents; ++agent)
         {
-            Action action = jointAction[agent];
+            while (!jointAction.containsKey(agent)) agent++;
+
+            Action action = jointAction.get(agent);
             char box;
 
             switch (action.type)
@@ -182,9 +184,10 @@ public class State implements SuperState
         int numAgents = this.agentRows.size();
 
         // Determine list of applicable actions for each individual agent.
-        Action[][] applicableActions = new Action[numAgents][];
+        Map<Integer,Action[]> applicableActions = new HashMap<>(numAgents);
         for (int agent = 0; agent < numAgents; ++agent)
         {
+            while (!agentRows.containsKey(agent)) agent++;
             ArrayList<Action> agentActions = new ArrayList<>(Action.values().length);
             for (Action action : Action.values())
             {
@@ -193,18 +196,18 @@ public class State implements SuperState
                     agentActions.add(action);
                 }
             }
-            applicableActions[agent] = agentActions.toArray(new Action[0]);
+            applicableActions.put(agent, agentActions.toArray(new Action[0]));
         }
 
         // Iterate over joint actions, check conflict and generate child states.
-        Action[] jointAction = new Action[numAgents];
-        int[] actionsPermutation = new int[numAgents];
+        Map<Integer,Action> jointAction = new HashMap<>(numAgents);
+        Map<Integer,Integer> actionsPermutation = new HashMap<>(numAgents);
         ArrayList<SuperState> expandedStates = new ArrayList<>(16);
         while (true)
         {
-            for (int agent = 0; agent < numAgents; ++agent)
-            {
-                jointAction[agent] = applicableActions[agent][actionsPermutation[agent]];
+            for (int agent = 0; agent < numAgents; ++agent) {
+                while (!agentRows.containsKey(agent)) agent++;
+                jointAction.put(agent, applicableActions.get(agent)[actionsPermutation.get(agent)]);
             }
 
             if (this.conflictingAgents(jointAction).length == 0)
@@ -216,14 +219,15 @@ public class State implements SuperState
             boolean done = false;
             for (int agent = 0; agent < numAgents; ++agent)
             {
-                if (actionsPermutation[agent] < applicableActions[agent].length - 1)
+                while (!agentRows.containsKey(agent)) agent++;
+                if (actionsPermutation.get(agent) < applicableActions.get(agent).length - 1)
                 {
-                    ++actionsPermutation[agent];
+                    actionsPermutation.computeIfPresent(agent, (k,val) -> ++val);
                     break;
                 }
                 else
                 {
-                    actionsPermutation[agent] = 0;
+                    actionsPermutation.put(agent, 0);
                     if (agent == numAgents - 1)
                     {
                         done = true;
@@ -297,20 +301,20 @@ public class State implements SuperState
         return false;
     }
 
-    public int[] conflictingAgents(Action[] jointAction)
+    public int[] conflictingAgents(Map<Integer, Action> jointAction)
     {
         int numAgents = this.agentRows.size();
 
-        int[] agentRows = new int[numAgents]; // row of new cell to become occupied by action
-        int[] agentCols = new int[numAgents]; // column of new cell to become occupied by action
-        int[] boxRows = new int[numAgents]; // current row of box moved by action
-        int[] boxCols = new int[numAgents]; // current column of box moved by action
+        Map<Integer,Integer> agentRows = new HashMap<>(numAgents); // row of new cell to become occupied by action
+        Map<Integer,Integer> agentCols = new HashMap<>(numAgents); // column of new cell to become occupied by action
+        Map<Integer,Integer> boxRows = new HashMap<>(numAgents); // current row of box moved by action
+        Map<Integer,Integer> boxCols = new HashMap<>(numAgents); // current column of box moved by action
         char[][] map = AgentState.clone(this.boxes);
 
         // Collect cells to be occupied and boxes to be moved
-        for (int agent = 0; agent < numAgents; ++agent)
-        {
-            Action action = jointAction[agent];
+        for (Map.Entry<Integer, Integer> entry : this.agentRows.entrySet()) {
+            int agent = entry.getKey();
+            Action action = jointAction.get(agent);
             int agentRow = this.agentRows.get(agent);
             int agentCol = this.agentCols.get(agent);
 
@@ -322,71 +326,94 @@ public class State implements SuperState
                     break;
 
                 case Move:
-                    agentRows[agent] = agentRow + action.agentRowDelta;
-                    agentCols[agent] = agentCol + action.agentColDelta;
-                    boxRows[agent] = -1; // Distinct dummy value
-                    boxCols[agent] = -1; // Distinct dummy value
+                    agentRows.put(agent, agentRow + action.agentRowDelta);
+                    agentCols.put(agent, agentCol + action.agentColDelta);
+                    boxRows.put(agent, -1); // Distinct dummy value
+                    boxCols.put(agent, -1); // Distinct dummy value
                     break;
 
                 case Push:
-                    agentRows[agent] = agentRow + action.agentRowDelta;
-                    agentCols[agent] = agentCol + action.agentColDelta;
-                    boxRows[agent] = agentRows[agent] + action.boxRowDelta;
-                    boxCols[agent] = agentCols[agent] + action.boxColDelta;
+                    agentRows.put(agent, agentRow + action.agentRowDelta);
+                    agentCols.put(agent, agentCol + action.agentColDelta);
+                    boxRows.put(agent, agentRows.get(agent) + action.boxRowDelta);
+                    boxCols.put(agent, agentCols.get(agent) + action.boxColDelta);
                     // remove box from static map
-                    map[agentRows[agent]][agentCols[agent]] = 0;
+                    map[agentRows.get(agent)][agentCols.get(agent)] = 0;
                     break;
 
                 case Pull:
-                    agentRows[agent] = agentRow + action.agentRowDelta;
-                    agentCols[agent] = agentCol + action.agentColDelta;
-                    boxRows[agent] = agentRow;
-                    boxCols[agent] = agentCol;
+                    agentRows.put(agent, agentRow + action.agentRowDelta);
+                    agentCols.put(agent, agentCol + action.agentColDelta);
+                    boxRows.put(agent, agentRow);
+                    boxCols.put(agent, agentCol);
                     int oldBoxRow = agentRow - action.boxRowDelta;
                     int oldBoxCol = agentCol - action.boxColDelta;
                     // remove box from static map
                     map[oldBoxRow][oldBoxCol] = 0;
                     break;
-           }
+            }
         }
 
         for (int a1 = 0; a1 < numAgents; ++a1)
         {
-            if (jointAction[a1] == Action.NoOp)
+            while (!agentRows.containsKey(a1)) a1++;
+
+            if (jointAction.get(a1) == Action.NoOp)
             {
                 continue;
             }
 
             // Agent moving into stationary box or agent
-            if (map[agentRows[a1]][agentCols[a1]] != 0) {
-                return new int[] {a1};
+//            System.err.println(jointAction.get(a1));
+//            System.err.println(this);
+
+            System.err.println();
+            if (map[agentRows.get(a1)][agentCols.get(a1)] != 0) {
+                char c = map[agentRows.get(a1)][agentCols.get(a1)];
+                if (SearchClient.isBox(c)) {
+                    Color agentColor = this.boxColors.get(c);
+                    for (Map.Entry<Integer,Color> entry : this.agentColors.entrySet()) {
+                        int agent = entry.getKey();
+                        Color color = entry.getValue();
+                        if (agentColor.equals(color)) {
+                            return new int[]{a1,agent};
+                        }
+                    }
+
+                } else {
+                    return new int[] {a1, c-'0'};
+                }
+
+                return new int[] {a1, };
             }
 
             for (int a2 = a1 + 1; a2 < numAgents; ++a2)
             {
-                if (jointAction[a2] == Action.NoOp)
+                while (!agentRows.containsKey(a2)) a2++;
+
+                if (jointAction.get(a2) == Action.NoOp)
                 {
                     continue;
                 }
 
                 // Agents moving into same cell?
-                if (agentRows[a1] == agentRows[a2] && agentCols[a1] == agentCols[a2])
+                if (agentRows.get(a1).equals(agentRows.get(a2)) && agentCols.get(a1).equals(agentCols.get(a2)))
                 {
                     return new int[] {a1,a2};
                 }
 
                 // Boxes moving into same cell
-                if ( (boxRows[a1] == boxRows[a2] && boxRows[a1] != -1)  && (boxCols[a1] == boxCols[a2] && boxCols[a1] != -1) ) {
+                if ( (boxRows.get(a1).equals(boxRows.get(a2)) && boxRows.get(a1) != -1)  && (boxCols.get(a1).equals(boxCols.get(a2)) && boxCols.get(a1) != -1) ) {
                     return new int[] {a1,a2};
                 }
 
                 // Agent 1 and Box 2 moving into same cell
-                if (agentRows[a1] == boxRows[a2] && agentCols[a1] == boxCols[a2]) {
+                if (agentRows.get(a1).equals(boxRows.get(a2)) && agentCols.get(a1).equals(boxCols.get(a2))) {
                     return new int[] {a1,a2};
                 }
 
                 // Box 1 and Agent 2 moving into same cell
-                if (boxRows[a1] == agentRows[a2] && boxCols[a1] == agentCols[a2]) {
+                if (boxRows.get(a1).equals(agentRows.get(a2)) && boxCols.get(a1).equals(agentCols.get(a2))) {
                     return new int[] {a1,a2};
                 }
 
@@ -406,6 +433,7 @@ public class State implements SuperState
     {
         for (int i = 0; i < this.agentRows.size(); i++)
         {
+            while (!agentRows.containsKey(i)) i++;
             if (this.agentRows.get(i) == row && this.agentCols.get(i) == col)
             {
                 return (char) ('0' + i);
@@ -414,9 +442,10 @@ public class State implements SuperState
         return 0;
     }
 
-    public Action[][] extractPlan()
+    public Map<Integer, Action>[] extractPlan()
     {
-        Action[][] plan = new Action[this.g][];
+        @SuppressWarnings("unchecked")
+        Map<Integer, Action>[] plan = new HashMap[this.g];
         State state = this;
         while (state.jointAction != null)
         {

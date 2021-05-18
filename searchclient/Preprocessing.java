@@ -5,11 +5,11 @@ public class Preprocessing {
     private Integer[][] referenceMap;
     private boolean reachedEndOfMap = false;
 
-    public Preprocessing(State initialState) {
+    public Preprocessing(AgentState initialState, SubGoal subGoal) {
         //instantiate the new map used to reference how far away the agent is for any point on the map
         referenceMap = new Integer[initialState.walls.length][initialState.walls[0].length];
 
-        frontier.add(new PreState(initialState.agentRows.get(0), initialState.agentCols.get(0), 0));
+        frontier.add(new PreState(subGoal.row, subGoal.col, 0));
 
         while (!frontier.isEmpty()) {
 
@@ -43,7 +43,7 @@ public class Preprocessing {
 //        for (int i = 0; i < referenceMap.length; i++) {
 //            System.err.println("");
 //            for (int j = 0; j < referenceMap[0].length; j++) {
-//                System.err.print("[" + referenceMap[i][j] + "]");
+//                System.err.print("\t[" + referenceMap[i][j] + "]");
 //            }
 //        }
         return referenceMap;

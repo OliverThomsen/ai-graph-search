@@ -17,6 +17,7 @@ public class SearchClient {
     static Preprocessing preprocessing;
     static Integer[][] referenceMap;
     static AgentSearch[] agentSearches;
+    static Map<Integer, SubGoal> currentSubGoals;
 
     public static void main(String[] args) throws IOException {
         System.out.println("MOLILAK");
@@ -25,16 +26,16 @@ public class SearchClient {
         serverMessages = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.US_ASCII));
         originalState = Parser.parseLevel(serverMessages);
 
-        preprocessing = new Preprocessing(originalState);
-        referenceMap = preprocessing.getReferenceMap();
+        int numAgents = originalState.agentRows.size();
 
-        agentPlans = new ArrayList<>(originalState.agentRows.size());
+        agentPlans = new ArrayList<>(numAgents);
+        agentSearches = new AgentSearch[numAgents];
+        currentSubGoals = new HashMap<>(numAgents);
 
-        agentSearches = new AgentSearch[originalState.agentRows.size()];
-        for (int a=0 ; a < originalState.agentRows.size() ; a++) {
+        for (int a=0 ; a < numAgents ; a++) {
             agentPlans.add(new ArrayList<>(0));
             AgentState agentState = extractAgentState(originalState, a);
-            agentSearches[a] = new AgentSearch(agentState, referenceMap);
+            agentSearches[a] = new AgentSearch(agentState);
         }
 
         while (!originalState.isGoalState()) {
@@ -57,7 +58,16 @@ public class SearchClient {
                 continue;
             }
 
-            Action[] plan = agentSearches[agent].getNextSubPLan();
+            SubGoal subGoal = agentSearches[agent].getNextSubGoal();
+            System.err.println("Sub Goal: " + subGoal);
+
+            currentSubGoals.put(agent, subGoal);
+            agentSearches[agent].mainState.parent = null;
+            agentSearches[agent].mainState.action = null;
+            agentSearches[agent].mainState.g = 0;
+            Action[] plan = agentSearches[agent].getNextSubPLan(subGoal);
+
+            System.err.println(agentSearches[agent].mainState);
             agentPlans.set(agent, new ArrayList<>(Arrays.asList(plan)));
 
         }
@@ -69,23 +79,24 @@ public class SearchClient {
         int longestPlan = 0;
 
         while (moreMoves) {
-            // make sure at least on agent still has a plan
+            // make sure at least one agent still has a plan
             for (ArrayList<Action> plan : agentPlans) {
                 longestPlan = Math.max(longestPlan, plan.size());
             }
 
             // loop over each agent to extract their move, and collect them in a joint action
-            Action[] jointAction = new Action[agentPlans.size()];
+            Map<Integer, Action> jointAction = new HashMap<>(agentPlans.size());
             for (int agent=0; agent<agentPlans.size(); agent++) {
 
                 // Agent is in goal state and has no more moves
                 if (agentSearches[agent].mainState.isGoalState() && agentPlans.get(agent).size() == 0) {
-                    jointAction[agent] = Action.NoOp;
+                    jointAction.put(agent, Action.NoOp);
                     // If last agent to finish executing their plan
                     if (step >= longestPlan) {
                         moreMoves = false;
                         break;
-                    } else continue;
+                    }
+                    else continue;
                 }
 
                 // Agent has no more moves
@@ -95,7 +106,7 @@ public class SearchClient {
                     break;
                 }
 
-                jointAction[agent] = agentPlans.get(agent).get(step);;
+                jointAction.put(agent, agentPlans.get(agent).get(step));
             }
 
             if (!moreMoves) continue;
@@ -103,35 +114,53 @@ public class SearchClient {
             // Check if joint action is conflicting in original state
             int[] conflictingAgents = originalState.conflictingAgents(jointAction);
 
-            while (conflictingAgents.length > 0) {
-                AgentState[] states = new AgentState[conflictingAgents.length];
+            if (conflictingAgents.length > 1) {
+                moreMoves = false;
+                // todo: improve by giving new sub goals to agents instead of putting them in same state ex. if only one conflicting agent with a box
+                // todo: check if box is blocking or if agent can move around
+                AgentState[] conflictingStates = new AgentState[conflictingAgents.length];
                 // Save the good plan so far
                 saveRemainingPlans(step);
                 // roll back individual agent states to before conflict
                 int i = 0;
                 for (int agent : conflictingAgents) {
                     agentSearches[agent].rollBackState(agentPlans.get(agent).size() - step);
-                    states[i] = agentSearches[agent].mainState;
+                    agentPlans.get(agent).clear(); // delete remaining plan after the conflict
+                    conflictingStates[i] = agentSearches[agent].mainState;
                     i++;
                 }
 
-                // put conflicting agents into same state
-                State conflictState = putAgentsIntoSameState(states);
-                // todo: find sub goals for each agent
+                State conflictState = putAgentsIntoSameState(conflictingStates);
                 solveConflictingState(conflictState);
-
+                // reset step for net round
+                step = 0;
             }
 
-            // Apply joint action to original state
-            originalState = new State(originalState, jointAction);
-            step++;
+            else {
+                // Apply joint action to original state
+                jointAction.forEach((key, val) -> {
+                    System.err.print(val+ ", ");
+                });
+                System.err.println("");
+                System.err.println(originalState);
+                originalState = new State(originalState, jointAction);
+                step++;
+            }
         }
     }
 
     static void solveConflictingState(State state) {
-        // search on state
-        // merge state plan with agent plans
-
+        Frontier frontier = new FrontierBestFirst(new HeuristicGreedy(referenceMap, currentSubGoals));
+        State searchedState = (State) GraphSearch.search(state, frontier);
+        Map<Integer, Action>[] jointActions = searchedState.extractPlan();
+        for (Map<Integer, Action> jointAction : jointActions) {
+            for (Map.Entry<Integer, Action> entry: jointAction.entrySet()) {
+                int agent = entry.getKey();
+                Action action = entry.getValue();
+                agentPlans.get(agent).add(action);
+                agentSearches[agent].applyAction(action);
+            }
+        }
     }
 
 
@@ -189,19 +218,15 @@ public class SearchClient {
 
     static void sendPlanToServer() throws IOException{
         System.err.println(originalState);
-        Action[][] finalPlan = originalState.extractPlan();
+        Map<Integer, Action>[] finalPlan = originalState.extractPlan();
         if (finalPlan.length > 0) {
             System.err.format("Found solution of length %d", finalPlan.length);
-            for (Action[] jointAction : finalPlan) {
-//                System.err.print(jointAction[0].name);
-                System.out.print(jointAction[0].name);
-                for (int i = 1; i < jointAction.length; i++) {
-//                    System.err.print("|");
-//                    System.err.print(jointAction[i].name);
+            for (Map<Integer, Action> jointAction : finalPlan) {
+                System.out.print(jointAction.get(0).name);
+                for (int i = 1; i < jointAction.size(); i++) {
                     System.out.print("|");
-                    System.out.print(jointAction[i].name);
+                    System.out.print(jointAction.get(i).name);
                 }
-//                System.err.println();
                 System.out.println();
                 serverMessages.readLine();
             }
