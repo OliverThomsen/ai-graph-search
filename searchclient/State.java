@@ -328,6 +328,9 @@ public class State implements SuperState
                 case NoOp:
                     // add agent to static map
                     map[agentRow][agentCol] = (char) (agent +'0');
+                    // add agent to dynamic map
+                    agentRows.put(agent, agentRow);
+                    agentCols.put(agent, agentCol);
                     break;
 
                 case Move:
@@ -398,7 +401,7 @@ public class State implements SuperState
                     continue;
                 }
 
-                // Agents moving into same cell?
+                // Agents moving into same cell
                 if (agentRows.get(a1).equals(agentRows.get(a2)) && agentCols.get(a1).equals(agentCols.get(a2)))
                 {
                     return new int[] {a1,a2};
