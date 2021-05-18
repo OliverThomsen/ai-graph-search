@@ -321,6 +321,8 @@ public class State implements SuperState
             highestAgentNumber = Math.max(entry.getKey(), highestAgentNumber);
         }
 
+        Map<Integer,Integer> prevAgentRows = new HashMap<>(highestAgentNumber);
+        Map<Integer,Integer> prevAgentCols = new HashMap<>(highestAgentNumber);
         Map<Integer,Integer> agentRows = new HashMap<>(highestAgentNumber); // row of new cell to become occupied by action
         Map<Integer,Integer> agentCols = new HashMap<>(highestAgentNumber); // column of new cell to become occupied by action
         Map<Integer,Integer> boxRows = new HashMap<>(highestAgentNumber); // current row of box moved by action
@@ -333,6 +335,8 @@ public class State implements SuperState
             Action action = jointAction.get(agent);
             int agentRow = this.agentRows.get(agent);
             int agentCol = this.agentCols.get(agent);
+            prevAgentRows.put(agent, agentRow);
+            prevAgentCols.put(agent, agentCol);
 
             switch (action.type)
             {
@@ -417,6 +421,16 @@ public class State implements SuperState
                 {
                     return new int[] {a1,a2};
                 }
+
+                // Agents crossing
+                if (    agentRows.get(a1).equals(prevAgentRows.get(a2))
+                    &&  agentCols.get(a1).equals(prevAgentCols.get(a2))
+                    &&  agentRows.get(a2).equals(prevAgentRows.get(a1))
+                    &&  agentCols.get(a2).equals(prevAgentCols.get(a1))
+                ) {
+                    return new int[] {a1,a2};
+                }
+
 
                 // Boxes moving into same cell
                 if (       (boxRows.get(a1).equals(boxRows.get(a2)) && boxRows.get(a1) != -1)
