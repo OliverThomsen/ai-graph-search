@@ -3,7 +3,9 @@ package searchclient;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.ref.Reference;
 import java.nio.charset.StandardCharsets;
+import java.rmi.ServerError;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -14,8 +16,6 @@ public class SearchClient {
     static ArrayList<ArrayList<Action>> agentPlans;
     static ArrayList<Action[]> finalPlan = new ArrayList<>();
     static BufferedReader serverMessages;
-    static Preprocessing preprocessing;
-    static Integer[][] referenceMap;
     static AgentSearch[] agentSearches;
     static Map<Integer, SubGoal> currentSubGoals;
 
@@ -116,6 +116,20 @@ public class SearchClient {
             int[] conflictingAgents = originalState.conflictingAgents(jointAction);
 
             if (conflictingAgents.length > 1) {
+
+                jointAction.forEach((key, val) -> {
+                    System.err.print(key +": "+ val+", ");
+                });
+                System.err.println("");
+
+                System.err.print("conflicting agents: " );
+                for (int a : conflictingAgents) {
+                    System.err.print(a +" "+ jointAction.get(a) +"; " );
+
+                }
+                System.err.println(" ");
+                System.err.println(originalState);
+
                 moreMoves = false;
                 // todo: improve by giving new sub goals to agents instead of putting them in same state ex. if only one conflicting agent with a box
                 // todo: check if box is blocking or if agent can move around
@@ -139,11 +153,11 @@ public class SearchClient {
 
             else {
                 // Apply joint action to original state
-                jointAction.forEach((key, val) -> {
-                    System.err.print(val+ ", ");
-                });
-                System.err.println("");
-                System.err.println(originalState);
+//                jointAction.forEach((key, val) -> {
+//                    System.err.print(key +": "+val+ ", ");
+//                });
+//                System.err.println("");
+//                System.err.println(originalState);
                 originalState = new State(originalState, jointAction);
                 step++;
             }
@@ -151,8 +165,20 @@ public class SearchClient {
     }
 
     static void solveConflictingState(State state) {
-        Frontier frontier = new FrontierBestFirst(new HeuristicGreedy(referenceMap, currentSubGoals));
+        System.err.println("CONFLICT");
+        System.err.println(state);
+        Map<Integer, Integer[][]> referenceMaps = new HashMap<>(state.agentRows.size());
+        for (Map.Entry<Integer,Integer> entry : state.agentRows.entrySet()) {
+            int agent = entry.getKey();
+            SubGoal subGoal = currentSubGoals.get(agent);
+            Integer[][] referenceMap = Preprocessing.getReferenceMap(state.walls, subGoal);
+            referenceMaps.put(agent, referenceMap);
+        }
+
+        Frontier frontier = new FrontierBestFirst(new HeuristicGreedy(referenceMaps, currentSubGoals));
+        System.err.println(state);
         State searchedState = (State) GraphSearch.search(state, frontier);
+        System.err.println(searchedState);
         Map<Integer, Action>[] jointActions = searchedState.extractPlan();
         for (Map<Integer, Action> jointAction : jointActions) {
             for (Map.Entry<Integer, Action> entry: jointAction.entrySet()) {

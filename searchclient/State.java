@@ -210,7 +210,9 @@ public class State implements SuperState
         {
             for (int agent = 0; agent < numAgents; ++agent) {
                 while (!agentRows.containsKey(agent)) agent++;
-                jointAction.put(agent, applicableActions.get(agent)[actionsPermutation.get(agent)]);
+                int permutation = actionsPermutation.get(agent);
+                Action action = applicableActions.get(agent)[permutation];
+                jointAction.put(agent, action);
             }
 
             if (this.conflictingAgents(jointAction).length == 0)
@@ -367,13 +369,11 @@ public class State implements SuperState
             }
 
             // Agent moving into stationary box or agent
-//            System.err.println(jointAction.get(a1));
-//            System.err.println(this);
-
-            System.err.println();
             if (map[agentRows.get(a1)][agentCols.get(a1)] != 0) {
                 char c = map[agentRows.get(a1)][agentCols.get(a1)];
+                // moved into stationary box
                 if (SearchClient.isBox(c)) {
+                    // find agent that owns box
                     Color agentColor = this.boxColors.get(c);
                     for (Map.Entry<Integer,Color> entry : this.agentColors.entrySet()) {
                         int agent = entry.getKey();
@@ -382,12 +382,11 @@ public class State implements SuperState
                             return new int[]{a1,agent};
                         }
                     }
-
-                } else {
+                }
+                // moved into stationary agent
+                else {
                     return new int[] {a1, c-'0'};
                 }
-
-                return new int[] {a1, };
             }
 
             for (int a2 = a1 + 1; a2 < numAgents; ++a2)
@@ -406,7 +405,8 @@ public class State implements SuperState
                 }
 
                 // Boxes moving into same cell
-                if ( (boxRows.get(a1).equals(boxRows.get(a2)) && boxRows.get(a1) != -1)  && (boxCols.get(a1).equals(boxCols.get(a2)) && boxCols.get(a1) != -1) ) {
+                if (       (boxRows.get(a1).equals(boxRows.get(a2)) && boxRows.get(a1) != -1)
+                        && (boxCols.get(a1).equals(boxCols.get(a2)) && boxCols.get(a1) != -1) ) {
                     return new int[] {a1,a2};
                 }
 

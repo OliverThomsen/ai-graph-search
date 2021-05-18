@@ -6,8 +6,6 @@ import java.util.Map;
 
 public class AgentSearch {
     public AgentState mainState;
-    private Integer[][] referenceMap;
-    private Preprocessing preprocessing;
 
     public AgentSearch(AgentState state) {
         this.mainState = state;
@@ -16,10 +14,13 @@ public class AgentSearch {
     public Action[] getNextSubPLan(SubGoal goal) {
         Map<Integer, SubGoal> subGoal = new HashMap<>();
         subGoal.put(mainState.agent - '0', goal);
-        preprocessing = new Preprocessing(mainState, goal);
-        referenceMap = preprocessing.getReferenceMap();
+
+        Integer[][] referenceMap = Preprocessing.getReferenceMap(mainState.walls, goal);
+        Map<Integer, Integer[][]> referenceMaps = new HashMap<>(1);
+        referenceMaps.put(mainState.agent - '0', referenceMap);
+
         System.err.println();
-        Frontier frontier = new FrontierBestFirst(new HeuristicGreedy(referenceMap, subGoal));
+        Frontier frontier = new FrontierBestFirst(new HeuristicGreedy(referenceMaps, subGoal));
         mainState = (AgentState) GraphSearch.search(mainState, frontier);
         assert mainState != null;
         return mainState.extractPlan();

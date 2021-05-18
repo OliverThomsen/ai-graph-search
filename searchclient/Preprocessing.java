@@ -1,14 +1,11 @@
 package searchclient;
 
 public class Preprocessing {
-    private PreProcessFrontierBFS frontier = new PreProcessFrontierBFS();
-    private Integer[][] referenceMap;
-    private boolean reachedEndOfMap = false;
-
-    public Preprocessing(AgentState initialState, SubGoal subGoal) {
+    static Integer[][] getReferenceMap(boolean[][] walls, SubGoal subGoal) {
         //instantiate the new map used to reference how far away the agent is for any point on the map
-        referenceMap = new Integer[initialState.walls.length][initialState.walls[0].length];
+        Integer[][] referenceMap = new Integer[walls.length][walls[0].length];
 
+        PreProcessFrontierBFS frontier = new PreProcessFrontierBFS();
         frontier.add(new PreState(subGoal.row, subGoal.col, 0));
 
         while (!frontier.isEmpty()) {
@@ -28,24 +25,13 @@ public class Preprocessing {
                 // only if not in the frontier or explored set
                 if (prestate.x() >= 0 && prestate.y() >= 0 &&
                         prestate.x() < referenceMap.length && prestate.y() < referenceMap[0].length) {
-                    if (referenceMap[prestate.x()][prestate.y()] == null && !initialState.walls[prestate.x()][prestate.y()]
+                    if (referenceMap[prestate.x()][prestate.y()] == null && !walls[prestate.x()][prestate.y()]
                     && !frontier.contains(prestate)) {
                         frontier.add(prestate);
                     }
                 }
             }
-
-
         }
-    }
-
-    public Integer[][] getReferenceMap() {
-//        for (int i = 0; i < referenceMap.length; i++) {
-//            System.err.println("");
-//            for (int j = 0; j < referenceMap[0].length; j++) {
-//                System.err.print("\t[" + referenceMap[i][j] + "]");
-//            }
-//        }
         return referenceMap;
     }
 }

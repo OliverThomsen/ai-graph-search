@@ -1,19 +1,19 @@
 package searchclient;
 
-import java.util.ArrayList;
+import java.util.Map;
 
 public class CostCalculator {
-    private Integer[][] referenceMap;
+    private Map<Integer, Integer[][]> referenceMaps;
 
-    public CostCalculator(Integer[][] referenceMap){
-        this.referenceMap = referenceMap;
+    public CostCalculator(Map<Integer, Integer[][]> referenceMaps){
+        this.referenceMaps = referenceMaps;
     }
 
-    public int GetToBox(int agentRow, int agentCol, int goalRow, int goalCol){
-        return distanceBetween(agentRow, agentCol, goalRow, goalCol);
+    public int GetToBox(int agentRow, int agentCol, int goalRow, int goalCol, int agent){
+        return distanceBetween(agentRow, agentCol, goalRow, goalCol, agent);
     }
 
-    public int PushBoxToGoal(char[][] boxes,int agentRow, int agentCol, int goalRow, int goalCol, char box){
+    public int PushBoxToGoal(char[][] boxes,int agentRow, int agentCol, int goalRow, int goalCol, char box, int agent){
         // find box
         int cost = 0;
         int boxRow = 0;
@@ -28,21 +28,21 @@ public class CostCalculator {
             }
         }
         //calculate distance from agent to box
-        cost += distanceBetween(agentRow, agentCol, boxRow, boxCol);
+        cost += distanceBetween(agentRow, agentCol, boxRow, boxCol, agent);
         //calculate distance of box to goal
-        return cost += distanceBetween(boxRow, boxCol, goalRow, goalCol);
+        return cost += distanceBetween(boxRow, boxCol, goalRow, goalCol, agent);
     }
 
-    public int GetToCoordinate(int agentRow, int agentCol, int goalRow, int goalCol){
-        return distanceBetween(agentRow, agentCol, goalRow, goalCol);
+    public int GetToCoordinate(int agentRow, int agentCol, int goalRow, int goalCol, int agent){
+        return distanceBetween(agentRow, agentCol, goalRow, goalCol, agent);
     }
 
-    public int MoveBoxToHelp(int agentRow, int agentCol, int goalRow, int goalCol){
-        return distanceBetween(agentRow, agentCol, goalRow, goalCol);
+    public int MoveBoxToHelp(int agentRow, int agentCol, int goalRow, int goalCol, int agent){
+        return distanceBetween(agentRow, agentCol, goalRow, goalCol, agent);
     }
 
-    private int distanceBetween(int startRow, int startCol, int endRow, int endCol) {
-        int referenceLength = Math.abs(referenceMap[startRow][startCol]-referenceMap[endRow][endCol]);
+    private int distanceBetween(int startRow, int startCol, int endRow, int endCol, int agent) {
+        int referenceLength = Math.abs(referenceMaps.get(agent)[startRow][startCol]- referenceMaps.get(agent)[endRow][endCol]);
         int rowDiff = Math.abs(startRow - endRow);
         int colDiff = Math.abs(startCol - endCol);
         int manHLength = rowDiff + colDiff;

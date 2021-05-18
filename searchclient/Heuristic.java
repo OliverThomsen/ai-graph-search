@@ -8,12 +8,12 @@ public abstract class Heuristic implements Comparator<SuperState> {
     private CostCalculator calculator;
     private Map<Integer, SubGoal> subGoals;
 
-    public Heuristic(Integer[][] referenceMap, Map<Integer, SubGoal> subGoals)
+    public Heuristic(Map<Integer, Integer[][]> referenceMaps, Map<Integer, SubGoal> subGoals)
     {
 
         this.subGoals = subGoals;
         // Here's a chance to pre-process the static parts of the level.
-        this.calculator = new CostCalculator(referenceMap);
+        this.calculator = new CostCalculator(referenceMaps);
     }
 
     public int h(SuperState s) {
@@ -25,16 +25,16 @@ public abstract class Heuristic implements Comparator<SuperState> {
 
             switch (subGoal.type) {
                 case GET_TO_BOX:
-                    cost += calculator.GetToBox(state.row, state.col, subGoal.row, subGoal.col);
+                    cost += calculator.GetToBox(state.row, state.col, subGoal.row, subGoal.col, state.agent-'0');
                     break;
                 case PUSH_BOX_TO_GOAL:
-                    cost += calculator.PushBoxToGoal(state.boxes, state.row, state.col, subGoal.row, subGoal.col, subGoal.character);
+                    cost += calculator.PushBoxToGoal(state.boxes, state.row, state.col, subGoal.row, subGoal.col, subGoal.character, state.agent-'0');
                     break;
                 case GET_TO_COORDINATE:
-                    cost += calculator.GetToCoordinate(state.row, state.col, subGoal.row, subGoal.col);
+                    cost += calculator.GetToCoordinate(state.row, state.col, subGoal.row, subGoal.col, state.agent-'0');
                     break;
                 case MOVE_BOX_TO_HELP:
-                    cost += calculator.MoveBoxToHelp(state.row, state.col, subGoal.row, subGoal.col);
+                    cost += calculator.MoveBoxToHelp(state.row, state.col, subGoal.row, subGoal.col, state.agent-'0');
                     break;
                 default:
                     cost += Integer.MAX_VALUE;
@@ -49,16 +49,16 @@ public abstract class Heuristic implements Comparator<SuperState> {
 
                 switch (subGoal.type) {
                     case GET_TO_BOX:
-                        cost += calculator.GetToBox(state.agentRows.get(a), state.agentCols.get(a), subGoal.row, subGoal.col);
+                        cost += calculator.GetToBox(state.agentRows.get(a), state.agentCols.get(a), subGoal.row, subGoal.col, a);
                         break;
                     case PUSH_BOX_TO_GOAL:
-                        cost += calculator.PushBoxToGoal(state.boxes, state.agentRows.get(a), state.agentCols.get(a), subGoal.row, subGoal.col, subGoal.character);
+                        cost += calculator.PushBoxToGoal(state.boxes, state.agentRows.get(a), state.agentCols.get(a), subGoal.row, subGoal.col, subGoal.character, a);
                         break;
                     case GET_TO_COORDINATE:
-                        cost += calculator.GetToCoordinate(state.agentRows.get(a), state.agentCols.get(a), subGoal.row, subGoal.col);
+                        cost += calculator.GetToCoordinate(state.agentRows.get(a), state.agentCols.get(a), subGoal.row, subGoal.col, a);
                         break;
                     case MOVE_BOX_TO_HELP:
-                        cost += calculator.MoveBoxToHelp(state.agentRows.get(a), state.agentCols.get(a), subGoal.row, subGoal.col);
+                        cost += calculator.MoveBoxToHelp(state.agentRows.get(a), state.agentCols.get(a), subGoal.row, subGoal.col, a);
                         break;
                     default:
                         cost += Integer.MAX_VALUE;
@@ -87,9 +87,9 @@ public abstract class Heuristic implements Comparator<SuperState> {
 
 
 class HeuristicGreedy extends Heuristic {
-    public HeuristicGreedy(Integer[][] referenceMap, Map<Integer, SubGoal> subGoals)
+    public HeuristicGreedy(Map<Integer, Integer[][]> referenceMaps, Map<Integer, SubGoal> subGoals)
     {
-        super(referenceMap, subGoals);
+        super(referenceMaps, subGoals);
     }
 
     @Override
