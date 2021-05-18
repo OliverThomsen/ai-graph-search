@@ -211,8 +211,8 @@ public class SearchClient {
         }
 
         // loop through map
-        for (int row = 0; row > rows ; row++) {
-            for (int col = 0; col > cols; col++) {
+        for (int row = 0; row < rows ; row++) {
+            for (int col = 0; col < cols; col++) {
                 for (AgentState agentState : agentStates) {
                     char box = agentState.boxes[row][col];
                     if (isBox(box)) {
