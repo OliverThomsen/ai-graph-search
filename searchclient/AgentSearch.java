@@ -86,6 +86,18 @@ public class AgentSearch {
                 }
             }
         }
+
+        // Else find agent goal
+        for (int row = 0; row < mainState.goals.length; row++) {
+            for (int col = 0; col < mainState.goals[0].length; col++) {
+                char goal = mainState.goals[row][col];
+                // if goal belongs to agent
+                if (goal == this.mainState.agent) {
+                    return new SubGoal(row, col, goal, SubGoalType.GET_TO_COORDINATE, goalBoxes);
+                }
+            }
+        }
+
         return null;
     }
 
