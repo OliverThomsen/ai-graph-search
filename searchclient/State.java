@@ -217,7 +217,7 @@ public class State implements SuperState
                 jointAction.put(agent, action);
             }
 
-            if (this.conflictingAgents(jointAction).length == 0)
+            if (this.conflictingAgents(jointAction).size() == 0)
             {
                 expandedStates.add(new State(this, jointAction));
             }
@@ -314,7 +314,7 @@ public class State implements SuperState
         return false;
     }
 
-    public int[] conflictingAgents(Map<Integer, Action> jointAction)
+    public Set<Integer> conflictingAgents(Map<Integer, Action> jointAction)
     {
         int highestAgentNumber = this.agentRows.size();
         for (Map.Entry<Integer,Integer> entry : agentRows.entrySet()) {
@@ -377,6 +377,8 @@ public class State implements SuperState
             }
         }
 
+        Set<Integer> conflictingAgents = new HashSet<>();
+
         for (int a1 = 0; a1 < highestAgentNumber; ++a1)
         {
             while (!agentRows.containsKey(a1)) a1++;
@@ -392,9 +394,15 @@ public class State implements SuperState
                 char c = map[boxRows.get(a1)][boxCols.get(a1)];
                 if (c != 0) {
                     // box moved into box
-                    if (SearchClient.isBox(c)) return new int[] {a1, getBoxOwner(c)};
+                    if (SearchClient.isBox(c)){
+                        conflictingAgents.add(a1);
+                        conflictingAgents.add(getBoxOwner(c));
+                    }
                     // box moved into agent
-                    else return new int[]{a1, c-'0'};
+                    else {
+                        conflictingAgents.add(a1);
+                        conflictingAgents.add(c-'0');
+                    }
                 }
             }
 
@@ -402,9 +410,15 @@ public class State implements SuperState
             char c = map[agentRows.get(a1)][agentCols.get(a1)];
             if (c != 0) {
                 // agent moved into stationary box
-                if (SearchClient.isBox(c)) return new int[]{a1, getBoxOwner(c)};
+                if (SearchClient.isBox(c)){
+                    conflictingAgents.add(a1);
+                    conflictingAgents.add(getBoxOwner(c));
+                }
                 // agent moved into stationary agent
-                else return new int[] {a1, c-'0'};
+                else {
+                    conflictingAgents.add(a1);
+                    conflictingAgents.add(c-'0');
+                }
             }
 
             for (int a2 = a1 + 1; a2 < highestAgentNumber; ++a2)
@@ -419,7 +433,8 @@ public class State implements SuperState
                 // Agents moving into same cell
                 if (agentRows.get(a1).equals(agentRows.get(a2)) && agentCols.get(a1).equals(agentCols.get(a2)))
                 {
-                    return new int[] {a1,a2};
+                    conflictingAgents.add(a1);
+                    conflictingAgents.add(a2);
                 }
 
                 // Agents crossing
@@ -428,31 +443,35 @@ public class State implements SuperState
                     &&  agentRows.get(a2).equals(prevAgentRows.get(a1))
                     &&  agentCols.get(a2).equals(prevAgentCols.get(a1))
                 ) {
-                    return new int[] {a1,a2};
+                    conflictingAgents.add(a1);
+                    conflictingAgents.add(a2);
                 }
 
 
                 // Boxes moving into same cell
                 if (       (boxRows.get(a1).equals(boxRows.get(a2)) && boxRows.get(a1) != -1)
                         && (boxCols.get(a1).equals(boxCols.get(a2)) && boxCols.get(a1) != -1) ) {
-                    return new int[] {a1,a2};
+                    conflictingAgents.add(a1);
+                    conflictingAgents.add(a2);
                 }
 
                 // Agent 1 and Box 2 moving into same cell
                 if (agentRows.get(a1).equals(boxRows.get(a2)) && agentCols.get(a1).equals(boxCols.get(a2))) {
-                    return new int[] {a1,a2};
+                    conflictingAgents.add(a1);
+                    conflictingAgents.add(a2);
                 }
 
                 // Box 1 and Agent 2 moving into same cell
                 if (boxRows.get(a1).equals(agentRows.get(a2)) && boxCols.get(a1).equals(agentCols.get(a2))) {
-                    return new int[] {a1,a2};
+                    conflictingAgents.add(a1);
+                    conflictingAgents.add(a2);
                 }
 
 
             }
         }
 
-        return new int[0];
+        return conflictingAgents;
     }
 
     private int getBoxOwner(char box) {

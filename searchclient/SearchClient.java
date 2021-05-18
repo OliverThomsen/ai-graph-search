@@ -4,10 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class SearchClient {
     static State originalState;
@@ -107,9 +104,9 @@ public class SearchClient {
             }
 
             // Check if joint action is conflicting in original state
-            int[] conflictingAgents = originalState.conflictingAgents(jointAction);
+            Set<Integer> conflictingAgents = originalState.conflictingAgents(jointAction);
 
-            if (conflictingAgents.length > 1) {
+            if (conflictingAgents.size() > 1) {
 
                 jointAction.forEach((key, val) -> System.err.print(key +": "+ val+", "));
                 System.err.println("");
@@ -119,7 +116,7 @@ public class SearchClient {
 
                 // todo: improve by giving new sub goals to agents instead of putting them in same state ex. if only one conflicting agent with a box
                 // todo: check if box is blocking or if agent can move around
-                AgentState[] conflictingStates = new AgentState[conflictingAgents.length];
+                AgentState[] conflictingStates = new AgentState[conflictingAgents.size()];
                 // Save the good plan so far
                 saveRemainingPlans(step);
                 int i = 0;
