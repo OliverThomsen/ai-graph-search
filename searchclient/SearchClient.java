@@ -13,7 +13,7 @@ public class SearchClient {
     static BufferedReader serverMessages;
     static AgentSearch[] agentSearches;
 
-    static Set<Integer> recentConflicts = new HashSet<>();
+    static Map<Integer,Conflict> recentConflicts = new HashMap<>();
 
     public static void main(String[] args) throws IOException {
         System.out.println("MOLILAK");
@@ -106,15 +106,25 @@ public class SearchClient {
             }
 
             // Check if joint action is conflicting in original state
-            Set<Integer> conflictingAgents = originalState.allConflictingAgents(jointAction);
+            Map<Integer, Conflict> conflictingAgents = originalState.allConflictingAgents(jointAction);
+
+            for (Map.Entry entry: conflictingAgents.entrySet()) {
+                System.err.print("line 112 conflict, the agent is : " + entry.getKey() +" "+ jointAction.get(entry.getKey()) +"; " );
+                System.err.println(" ");
+                Conflict co = (Conflict) entry.getValue();
+                System.err.println("the conflict is this: conflicting agent" + co.getConflictAgent() + " the coordinates is " + co.getCoordinatesOfConflict()[0] + co.getCoordinatesOfConflict()[1]);
+            }
+            System.err.println(" ");
 
 
-            if (conflictingAgents.size() > 1) {
-                conflictingAgents.addAll(recentConflicts);
+            if (conflictingAgents.size() >= 1) {
+                conflictingAgents.putAll(recentConflicts);
                 jointAction.forEach((key, val) -> System.err.print(key +": "+ val+", "));
                 System.err.println("");
                 System.err.print("conflicting agents: " );
-                for (int a : conflictingAgents) System.err.print(a +" "+ jointAction.get(a) +"; " );
+                for (Map.Entry entry: conflictingAgents.entrySet()) {
+                    System.err.print(entry.getKey() +" "+ jointAction.get(entry.getKey()) +"; " );
+                }
                 System.err.println(" ");
 
                 // todo: improve by giving new sub goals to agents instead of putting them in same state ex. if only one conflicting agent with a box
@@ -124,17 +134,17 @@ public class SearchClient {
                 // Save the good plan so far
                 saveRemainingPlans(step);
                 int i = 0;
-                for (int agent : conflictingAgents) {
+                for (Map.Entry<Integer, Conflict> entry: conflictingAgents.entrySet()) {
                     // roll back individual agent states to before conflict
-                    agentSearches[agent].rollBackState(agentPlans.get(agent).size());
+                    agentSearches[(int)entry.getKey()].rollBackState(agentPlans.get((int)entry.getKey()).size());
                     // delete remaining plan after the conflict
-                    agentPlans.get(agent).clear();
-                    conflictingStates[i] = agentSearches[agent].mainState;
+                    agentPlans.get((int)entry.getKey()).clear();
+                    conflictingStates[i] = agentSearches[(int)entry.getKey()].mainState;
                     i++;
                 }
                 State conflictState = putAgentsIntoSameState(conflictingStates);
-                solveConflictingState(conflictState);
-                recentConflicts.addAll(conflictingAgents);
+                solveConflictingState(conflictState, conflictingAgents);
+                recentConflicts.putAll(conflictingAgents);
                 return;
             }
 
@@ -148,7 +158,7 @@ public class SearchClient {
         }
     }
 
-    static void solveConflictingState(State state) {
+    static void solveConflictingState(State state, Map<Integer, Conflict> conflictMap) {
         System.err.println("CONFLICT");
         System.err.println(state);
         int numAgents = state.agentRows.size();
