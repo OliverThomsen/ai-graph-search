@@ -1,5 +1,6 @@
 package searchclient;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 public class CostCalculator {
@@ -9,6 +10,19 @@ public class CostCalculator {
         this.referenceMaps = referenceMaps;
     }
 
+    public int goalBoxes(char[][] boxes, char[][] goals, ArrayList<Character> goalBoxes, int agent){
+        int cost = 0;
+        for (char box: goalBoxes) {
+            int boxRow = findBox(boxes, box)[0];
+            int boxCol = findBox(boxes, box)[1];
+            int goalRow = findBox(goals, box)[0];
+            int goalCol = findBox(goals, box)[1];
+            cost += distanceBetween(boxRow, boxCol, goalRow, goalCol, agent);
+        }
+
+        return cost;
+    }
+
     public int GetToBox(int agentRow, int agentCol, int goalRow, int goalCol, int agent){
         return distanceBetween(agentRow, agentCol, goalRow, goalCol, agent);
     }
@@ -16,6 +30,43 @@ public class CostCalculator {
     public int PushBoxToGoal(char[][] boxes,int agentRow, int agentCol, int goalRow, int goalCol, char box, int agent){
         // find box
         int cost = 0;
+        int boxRow = findBox(boxes, box)[0];
+        int boxCol = findBox(boxes, box)[1];
+
+        //calculate distance from agent to box
+        cost += distanceBetween(agentRow, agentCol, boxRow, boxCol, agent);
+        //calculate distance of box to goal
+        cost += distanceBetween(boxRow, boxCol, goalRow, goalCol, agent);
+        return cost;
+    }
+
+    public int GetToCoordinate(int agentRow, int agentCol, int goalRow, int goalCol, int agent){
+        return distanceBetween(agentRow, agentCol, goalRow, goalCol, agent);
+    }
+
+    public int MoveBoxToHelp(char[][] boxes,int agentRow, int agentCol, int goalRow, int goalCol, char box, int agent){
+        int cost = 0;
+        // find box
+        int boxRow = findBox(boxes, box)[0];
+        int boxCol = findBox(boxes, box)[1];
+        //calculate distance from agent to box
+        cost += distanceBetween(agentRow, agentCol, boxRow, boxCol, agent);
+        //penalize box for obstructing
+        cost += (10-distanceBetween(boxRow, boxCol, goalRow, goalCol, agent));
+        return cost;
+    }
+
+    private int distanceBetween(int startRow, int startCol, int endRow, int endCol, int agent) {
+        int referenceLength = Math.abs(referenceMaps.get(agent)[startRow][startCol] - referenceMaps.get(agent)[endRow][endCol]);
+        int rowDiff = Math.abs(startRow - endRow);
+        int colDiff = Math.abs(startCol - endCol);
+        int manHLength = rowDiff + colDiff;
+        return Math.max(referenceLength, manHLength);
+    }
+
+    public int[] findBox(char[][] boxes, char box){
+        // find box
+        int[] boxCor = new int[2];
         int boxRow = 0;
         int boxCol= 0;
         for (int row = 0; row < boxes.length ; row++) {
@@ -27,26 +78,9 @@ public class CostCalculator {
                 }
             }
         }
-        //calculate distance from agent to box
-        cost += distanceBetween(agentRow, agentCol, boxRow, boxCol, agent);
-        //calculate distance of box to goal
-        return cost += distanceBetween(boxRow, boxCol, goalRow, goalCol, agent);
-    }
-
-    public int GetToCoordinate(int agentRow, int agentCol, int goalRow, int goalCol, int agent){
-        return distanceBetween(agentRow, agentCol, goalRow, goalCol, agent);
-    }
-
-    public int MoveBoxToHelp(int agentRow, int agentCol, int goalRow, int goalCol, int agent){
-        return distanceBetween(agentRow, agentCol, goalRow, goalCol, agent);
-    }
-
-    private int distanceBetween(int startRow, int startCol, int endRow, int endCol, int agent) {
-        int referenceLength = Math.abs(referenceMaps.get(agent)[startRow][startCol] - referenceMaps.get(agent)[endRow][endCol]);
-        int rowDiff = Math.abs(startRow - endRow);
-        int colDiff = Math.abs(startCol - endCol);
-        int manHLength = rowDiff + colDiff;
-        return Math.max(referenceLength, manHLength);
+        boxCor[0] = boxRow;
+        boxCor[1] = boxCol;
+        return boxCor;
     }
 
 //    public int boxGoalPennalty(ArrayList<Character> goalBoxes, char[][] boxes) {
