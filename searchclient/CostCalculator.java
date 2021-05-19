@@ -44,13 +44,18 @@ public class CostCalculator {
         return distanceBetween(agentRow, agentCol, goalRow, goalCol, agent);
     }
 
-    public int MoveBoxToHelp(char[][] boxes,int agentRow, int agentCol, int goalRow, int goalCol, char box, int agent){
+    public int MoveBoxToHelp(char[][] boxes, char[][] goals, int agentRow, int agentCol, int goalRow, int goalCol, char box, int agent){
         int cost = 0;
         // find box
         int boxRow = findBox(boxes, box)[0];
         int boxCol = findBox(boxes, box)[1];
         //calculate distance from agent to box
         cost += distanceBetween(agentRow, agentCol, boxRow, boxCol, agent);
+        //calculate distance of box to goal
+        // find box goal
+        int goalRow1 = findBox(goals, box)[0];
+        int goalCol1 = findBox(goals, box)[1];
+        cost += distanceBetween(boxRow, boxCol, goalRow1, goalCol1, agent);
         //penalize box for obstructing
         cost += (10-distanceBetween(boxRow, boxCol, goalRow, goalCol, agent));
         return cost;
