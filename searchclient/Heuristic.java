@@ -18,10 +18,10 @@ public abstract class Heuristic implements Comparator<SuperState> {
 
     public int h(SuperState s) {
         int cost = 0;
-
         if(s instanceof AgentState) {
             AgentState state = (AgentState) s;
             SubGoal subGoal = this.subGoals.get(state.agent - '0');
+            cost += calculator.goalBoxes(state.boxes, state.goals, subGoal.goalBoxes, state.agent-'0');
 
             switch (subGoal.type) {
                 case GET_TO_BOX:
@@ -34,7 +34,7 @@ public abstract class Heuristic implements Comparator<SuperState> {
                     cost += calculator.GetToCoordinate(state.row, state.col, subGoal.row, subGoal.col, state.agent-'0');
                     break;
                 case MOVE_BOX_TO_HELP:
-                    cost += calculator.MoveBoxToHelp(state.row, state.col, subGoal.row, subGoal.col, state.agent-'0');
+                    cost += calculator.MoveBoxToHelp(state.boxes, state.row, state.col, subGoal.row, subGoal.col, subGoal.character, state.agent-'0');
                     break;
                 case DONE:
                     cost += calculator.GetToCoordinate(state.row, state.col, subGoal.row, subGoal.col, state.agent-'0');
@@ -61,7 +61,7 @@ public abstract class Heuristic implements Comparator<SuperState> {
                         cost += calculator.GetToCoordinate(state.agentRows.get(a), state.agentCols.get(a), subGoal.row, subGoal.col, a);
                         break;
                     case MOVE_BOX_TO_HELP:
-                        cost += calculator.MoveBoxToHelp(state.agentRows.get(a), state.agentCols.get(a), subGoal.row, subGoal.col, a);
+                        cost += calculator.MoveBoxToHelp(state.boxes, state.agentRows.get(a), state.agentCols.get(a), subGoal.row, subGoal.col, subGoal.character, a);
                         break;
                     case DONE:
                         cost += calculator.GetToCoordinate(state.agentRows.get(a), state.agentCols.get(a), subGoal.row, subGoal.col, a);
