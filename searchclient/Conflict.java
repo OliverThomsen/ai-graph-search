@@ -5,12 +5,15 @@ public class Conflict {
     private int coordinatesOfConflictRow;
     private int coordinateOfConflictCol;
     private boolean isStationary;
+    private char conflictChar;
 
-    public Conflict(Integer conflictAgent, int coordinatesOfConflictRow, int coordinateOfConflictCol, boolean isStationary){
+    public Conflict(Integer conflictAgent, int coordinatesOfConflictRow, int coordinateOfConflictCol, boolean isStationary, char conflictChar){
         this.conflictAgent = conflictAgent;
         this.coordinatesOfConflictRow = coordinatesOfConflictRow;
         this.coordinateOfConflictCol = coordinateOfConflictCol;
         this.isStationary = isStationary;
+        this.conflictChar = conflictChar;
+
     }
 
     public int[] getCoordinatesOfConflict() {
@@ -26,5 +29,9 @@ public class Conflict {
 
     public boolean isStationary() {
         return isStationary;
+    }
+
+    public char getConflictChar() {
+        return conflictChar;
     }
 }

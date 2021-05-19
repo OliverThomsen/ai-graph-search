@@ -165,12 +165,26 @@ public class SearchClient {
         Map<Integer,Integer[][]> referenceMaps = new HashMap<>(numAgents);
         Map<Integer,SubGoal> subGoals = new HashMap<>(numAgents);
 
-        for (Map.Entry<Integer,Integer> entry : state.agentRows.entrySet()) {
+        for (Map.Entry<Integer,Conflict> entry : conflictMap.entrySet()) {
             int agent = entry.getKey();
-            SubGoal subGoal = agentSearches[agent].getNextSubGoal();
-            subGoals.put(agent, subGoal);
-            System.err.print(agent + ": "+subGoal+", ");
-            Integer[][] referenceMap = Preprocessing.getReferenceMap(state.walls, subGoal);
+            Conflict co = (Conflict) entry.getValue();
+
+            System.err.println("the conflict is this: this agent has a conflict " + agent + " conflicting agent: " + co.getConflictAgent() + " the coordinates is " + co.getCoordinatesOfConflict()[0] + co.getCoordinatesOfConflict()[1]+
+                    " " +co.isStationary() + "the conflicting char: " + co.getConflictChar());
+            if (entry.getValue().isStationary() && entry.getValue().getConflictChar() >= 'A' && entry.getValue().getConflictChar() <= 'Z'){
+                co = entry.getValue();
+                SubGoal subGoal = new SubGoal(co.getCoordinatesOfConflict()[0],co.getCoordinatesOfConflict()[1]
+                ,co.getConflictChar(),SubGoalType.MOVE_BOX_TO_HELP,agentSearches[co.getConflictAgent()].getGoalboxes());
+                subGoals.put(co.getConflictAgent(),subGoal);
+                System.err.println(co.getConflictAgent());
+            }
+            if (!subGoals.containsKey(agent)){
+                SubGoal subGoal = agentSearches[agent].getNextSubGoal();
+                subGoals.put(agent, subGoal);
+            }
+
+            System.err.print(agent + ": "+subGoals.get(agent)+", ");
+            Integer[][] referenceMap = Preprocessing.getReferenceMap(state.walls, subGoals.get(agent));
             referenceMaps.put(agent, referenceMap);
         }
 

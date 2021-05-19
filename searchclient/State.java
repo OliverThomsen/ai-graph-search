@@ -335,12 +335,12 @@ public class State implements SuperState
                 if(!cellIsFree(destRowAgent, destColAgent)){
                     char unknown = boxes[destRowAgent][destColAgent];
                     if (SearchClient.isBox(unknown)){
-                        return new Conflict(getBoxOwner(unknown),destRowAgent,destColAgent,true);
+                        return new Conflict(getBoxOwner(unknown),destRowAgent,destColAgent,true,unknown);
 
                     }
                     unknown = agentAt(destRowAgent,destColAgent);
                     if (unknown >= '0' && unknown <= '9'){
-                        return new Conflict(unknown-'0',destRowAgent,destColAgent,true);
+                        return new Conflict(unknown-'0',destRowAgent,destColAgent,true, unknown);
                     }
                     return null;
                 }
@@ -360,12 +360,12 @@ public class State implements SuperState
                         if(!cellIsFree(destRowBox, destColBox)){
                             char unknown = boxes[destRowBox][destColBox];
                             if (SearchClient.isBox(unknown)){
-                                return new Conflict(getBoxOwner(unknown),destRowBox,destColBox,true);
+                                return new Conflict(getBoxOwner(unknown),destRowBox,destColBox,true, unknown);
 
                             }
                             unknown = agentAt(destRowBox,destColBox);
                             if (unknown >= '0' && unknown <= '9'){
-                                return new Conflict(unknown-'0',destRowBox,destColBox,true);
+                                return new Conflict(unknown-'0',destRowBox,destColBox,true, unknown);
                             }
                             return null;
                         }
@@ -387,11 +387,11 @@ public class State implements SuperState
                         if(!cellIsFree(destRowAgent, destColAgent)){
                             char unknown = boxes[destRowAgent][destColAgent];
                             if (SearchClient.isBox(unknown)){
-                                return new Conflict(getBoxOwner(unknown),destRowAgent,destColAgent,true);
+                                return new Conflict(getBoxOwner(unknown),destRowAgent,destColAgent,true, unknown);
                             }
                             unknown = agentAt(destRowAgent,destColAgent);
                             if (unknown >= '0' && unknown <= '9') {
-                                return new Conflict(unknown-'0',destRowAgent,destColAgent,true);
+                                return new Conflict(unknown-'0',destRowAgent,destColAgent,true, unknown);
                             }
                             return null;
                         }
@@ -414,7 +414,7 @@ public class State implements SuperState
             if (conflict != null) {
                 conflictingAgents.put(agent,conflict);
                 conflictingAgents.put(conflict.getConflictAgent(),new Conflict(agent,conflict.getCoordinatesOfConflict()[0],
-                        conflict.getCoordinatesOfConflict()[1],true));
+                        conflict.getCoordinatesOfConflict()[1],false,conflict.getConflictChar()));
             }
         }
 
@@ -499,34 +499,34 @@ public class State implements SuperState
                 // Agents moving into same cell
                 if (agentRows.get(a1).equals(agentRows.get(a2)) && agentCols.get(a1).equals(agentCols.get(a2)))
                 {
-                    Conflict conflict = new Conflict(a2,agentRows.get(a2),agentCols.get(a2),false);
+                    Conflict conflict = new Conflict(a2,agentRows.get(a2),agentCols.get(a2),false,(char) (a2+'0'));
                     conflictingAgents.put(a1,conflict);
-                    Conflict conflict2 = new Conflict(a1,agentRows.get(a1),agentCols.get(a1),false);
+                    Conflict conflict2 = new Conflict(a1,agentRows.get(a1),agentCols.get(a1),false,(char) (a1+'0'));
                     conflictingAgents.put(a2,conflict2);
                 }
 
                 // Boxes moving into same cell
                 if (       (boxRows.get(a1).equals(boxRows.get(a2)) && boxRows.get(a1) != -1)
                         && (boxCols.get(a1).equals(boxCols.get(a2)) && boxCols.get(a1) != -1) ) {
-                    Conflict conflict = new Conflict(a2,boxRows.get(a2),boxCols.get(a2),false);
+                    Conflict conflict = new Conflict(a2,boxRows.get(a2),boxCols.get(a2),false,boxes[boxRows.get(a2)][boxCols.get(a2)]);
                     conflictingAgents.put(a1,conflict);
-                    Conflict conflict2 = new Conflict(a1,boxRows.get(a1),boxCols.get(a1),false);
+                    Conflict conflict2 = new Conflict(a1,boxRows.get(a1),boxCols.get(a1),false,boxes[boxRows.get(a1)][boxCols.get(a1)]);
                     conflictingAgents.put(a2,conflict2);
                 }
 
                 // Agent 1 and Box 2 moving into same cell
                 if (agentRows.get(a1).equals(boxRows.get(a2)) && agentCols.get(a1).equals(boxCols.get(a2))) {
-                    Conflict conflict = new Conflict(a2,boxRows.get(a2),boxCols.get(a2),false);
+                    Conflict conflict = new Conflict(a2,boxRows.get(a2),boxCols.get(a2),false,boxes[boxRows.get(a2)][boxCols.get(a2)]);
                     conflictingAgents.put(a1,conflict);
-                    Conflict conflict2 = new Conflict(a1,agentRows.get(a1),agentCols.get(a1),false);
+                    Conflict conflict2 = new Conflict(a1,agentRows.get(a1),agentCols.get(a1),false,(char) (a1+'0'));
                     conflictingAgents.put(a2,conflict2);
                 }
 
                 // Box 1 and Agent 2 moving into same cell
                 if (boxRows.get(a1).equals(agentRows.get(a2)) && boxCols.get(a1).equals(agentCols.get(a2))) {
-                    Conflict conflict = new Conflict(a1,boxRows.get(a1),boxCols.get(a1),false);
+                    Conflict conflict = new Conflict(a1,boxRows.get(a1),boxCols.get(a1),false,boxes[boxRows.get(a1)][boxCols.get(a1)]);
                     conflictingAgents.put(a2,conflict);
-                    Conflict conflict2 = new Conflict(a2,agentRows.get(a2),agentCols.get(a2),false);
+                    Conflict conflict2 = new Conflict(a2,agentRows.get(a2),agentCols.get(a2),false,(char) (a2+'0'));
                     conflictingAgents.put(a1,conflict2);
                 }
 

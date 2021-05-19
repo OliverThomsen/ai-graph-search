@@ -32,7 +32,7 @@ public class AgentSearch {
         }
     }
 
-    public SubGoal getNextSubGoal() {
+    public ArrayList<Character> getGoalboxes(){
         ArrayList<Character> goalBoxes = new ArrayList<>();
         for (int row = 0; row < mainState.boxes.length; row++) {
             for (int col = 0; col < mainState.boxes[0].length; col++) {
@@ -44,7 +44,11 @@ public class AgentSearch {
                 }
             }
         }
+        return goalBoxes;
+    }
 
+    public SubGoal getNextSubGoal() {
+        ArrayList<Character> goalBoxes = getGoalboxes();
 
         // Look for a box next to the agent
         char boxNextTo = 0;
