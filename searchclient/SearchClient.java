@@ -12,7 +12,7 @@ public class SearchClient {
     static ArrayList<Action[]> finalPlan = new ArrayList<>();
     static BufferedReader serverMessages;
     static AgentSearch[] agentSearches;
-    static Map<Integer, SubGoal> currentSubGoals;
+
     static Set<Integer> recentConflicts = new HashSet<>();
 
     public static void main(String[] args) throws IOException {
@@ -26,7 +26,6 @@ public class SearchClient {
 
         agentPlans = new ArrayList<>(numAgents);
         agentSearches = new AgentSearch[numAgents];
-        currentSubGoals = new HashMap<>(numAgents);
 
         for (int a=0 ; a < numAgents ; a++) {
             agentPlans.add(new ArrayList<>(0));
@@ -43,6 +42,7 @@ public class SearchClient {
     }
 
     static void findPartialAgentPlans() {
+
         for (int agent = 0; agent < agentSearches.length ; agent++ ) {
             // If agent already has a plan then skip agent
             if (agentPlans.get(agent).size() != 0) {
@@ -57,7 +57,6 @@ public class SearchClient {
             SubGoal subGoal = agentSearches[agent].getNextSubGoal();
             System.err.println("Sub Goal: " + subGoal);
 
-            currentSubGoals.put(agent, subGoal);
             agentSearches[agent].mainState.parent = null;
             agentSearches[agent].mainState.action = null;
             agentSearches[agent].mainState.g = 0;
@@ -120,6 +119,7 @@ public class SearchClient {
 
                 // todo: improve by giving new sub goals to agents instead of putting them in same state ex. if only one conflicting agent with a box
                 // todo: check if box is blocking or if agent can move around
+
                 AgentState[] conflictingStates = new AgentState[conflictingAgents.size()];
                 // Save the good plan so far
                 saveRemainingPlans(step);
@@ -151,15 +151,20 @@ public class SearchClient {
     static void solveConflictingState(State state) {
         System.err.println("CONFLICT");
         System.err.println(state);
-        Map<Integer, Integer[][]> referenceMaps = new HashMap<>(state.agentRows.size());
+        int numAgents = state.agentRows.size();
+        Map<Integer,Integer[][]> referenceMaps = new HashMap<>(numAgents);
+        Map<Integer,SubGoal> subGoals = new HashMap<>(numAgents);
+
         for (Map.Entry<Integer,Integer> entry : state.agentRows.entrySet()) {
             int agent = entry.getKey();
-            SubGoal subGoal = currentSubGoals.get(agent);
+            SubGoal subGoal = agentSearches[agent].getNextSubGoal();
+            subGoals.put(agent, subGoal);
+            System.err.print(agent + ": "+subGoal+", ");
             Integer[][] referenceMap = Preprocessing.getReferenceMap(state.walls, subGoal);
             referenceMaps.put(agent, referenceMap);
         }
 
-        Frontier frontier = new FrontierBestFirst(new HeuristicGreedy(referenceMaps, currentSubGoals));
+        Frontier frontier = new FrontierBestFirst(new HeuristicGreedy(referenceMaps, subGoals));
         System.err.println(state);
         State searchedState = (State) GraphSearch.search(state, frontier);
         System.err.println("Solved conflict");
@@ -170,11 +175,7 @@ public class SearchClient {
                 int agent = entry.getKey();
                 Action action = entry.getValue();
                 agentPlans.get(agent).add(action);
-                System.err.println("apply action to agent state");
-                System.err.println(agentSearches[agent].mainState);
-                System.err.println(agent +": "+action);
                 agentSearches[agent].applyAction(action);
-                System.err.println(agentSearches[agent].mainState);
             }
         }
     }
@@ -271,7 +272,7 @@ public class SearchClient {
                     }
                 }
                 char goal = state.goals[row][col];
-                if (isGoal(goal) && state.boxColors.get(goal) == color) {
+                if ((isBox(goal) && state.boxColors.get(goal) == color) || goal-'0' == agent) {
                     goals[row][col] = goal;
                 }
             }

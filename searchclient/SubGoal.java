@@ -18,7 +18,7 @@ public class SubGoal {
         this.goalBoxes = goalBoxes;
     }
 
-    public boolean completedFirstSubGoal(AgentState agentState) {
+    public boolean completed(AgentState agentState) {
         switch (type){
             case GET_TO_BOX:
                 return (Math.abs(agentState.row - row) == 1
@@ -29,6 +29,7 @@ public class SubGoal {
             case PUSH_BOX_TO_GOAL:
                 return agentState.boxes[row][col] == character;
             case GET_TO_COORDINATE:
+            case DONE:
                 return agentState.col == col && agentState.row == row;
             default:
                 return false;
@@ -87,6 +88,9 @@ public class SubGoal {
                 break;
             case MOVE_OUT_OF_THE_WAY:
                 name = "MOVE_OUT_OF_THE_WAY";
+                break;
+            case DONE:
+                name = "DONE";
                 break;
         }
         return name+" "+character+" ("+row+","+col+")";

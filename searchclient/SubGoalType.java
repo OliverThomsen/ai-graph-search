@@ -6,5 +6,6 @@ public enum SubGoalType {
     PUSH_BOX_TO_GOAL,
     OVERALL_AGENT_COST,
     MOVE_BOX_TO_HELP,
-    MOVE_OUT_OF_THE_WAY;
+    MOVE_OUT_OF_THE_WAY,
+    DONE;
 }

@@ -36,6 +36,9 @@ public abstract class Heuristic implements Comparator<SuperState> {
                 case MOVE_BOX_TO_HELP:
                     cost += calculator.MoveBoxToHelp(state.row, state.col, subGoal.row, subGoal.col, state.agent-'0');
                     break;
+                case DONE:
+                    cost += calculator.GetToCoordinate(state.row, state.col, subGoal.row, subGoal.col, state.agent-'0');
+                    break;
                 default:
                     cost += Integer.MAX_VALUE;
             }
@@ -59,6 +62,9 @@ public abstract class Heuristic implements Comparator<SuperState> {
                         break;
                     case MOVE_BOX_TO_HELP:
                         cost += calculator.MoveBoxToHelp(state.agentRows.get(a), state.agentCols.get(a), subGoal.row, subGoal.col, a);
+                        break;
+                    case DONE:
+                        cost += calculator.GetToCoordinate(state.agentRows.get(a), state.agentCols.get(a), subGoal.row, subGoal.col, a);
                         break;
                     default:
                         cost += Integer.MAX_VALUE;

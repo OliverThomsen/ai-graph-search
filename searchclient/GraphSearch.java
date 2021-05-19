@@ -39,7 +39,7 @@ public class GraphSearch {
             } else if (currentState instanceof AgentState) {
                 AgentState state = (AgentState) currentState;
                 SubGoal subGoal = frontier.getSubGoals().get(state.agent - '0');
-                if (subGoal.completedFirstSubGoal(state)) {
+                if (subGoal.completed(state)) {
                     printSearchStatus(explored,frontier);
                     return state;
                 }

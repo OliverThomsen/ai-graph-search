@@ -91,14 +91,14 @@ public class AgentSearch {
         for (int row = 0; row < mainState.goals.length; row++) {
             for (int col = 0; col < mainState.goals[0].length; col++) {
                 char goal = mainState.goals[row][col];
-                // if goal belongs to agent
-                if (goal == this.mainState.agent) {
+                // if goal belongs to agent, and is not completed
+                if (goal == this.mainState.agent && (mainState.row != row && mainState.col != col)) {
                     return new SubGoal(row, col, goal, SubGoalType.GET_TO_COORDINATE, goalBoxes);
                 }
             }
         }
 
-        return null;
+        return new SubGoal(mainState.row, mainState.col, mainState.agent, SubGoalType.DONE, goalBoxes);
     }
 
     public void applyAction(Action action) {
