@@ -54,7 +54,12 @@ public class AgentSearch {
         char boxNextTo = 0;
         int boxNextToRow = -1;
         int boxNextToCol = -1;
-
+        for (int i = 0; i < mainState.goals.length; i++) {
+            System.err.println(" ");
+            for (int j = 0; j < mainState.goals[i].length; j++) {
+                System.err.print("the goal is " +mainState.goals[i][j]+ " row is: " + i +" col is: " + j );
+            }
+        }
         int[][] coordinates = new int[][]{{-1,0},{1,0},{0,-1},{0,1}};
         for (int[] c : coordinates) {
             int boxRow = mainState.row+c[0];
@@ -110,7 +115,8 @@ public class AgentSearch {
             for (int col = 0; col < mainState.goals[0].length; col++) {
                 char goal = mainState.goals[row][col];
                 // if goal belongs to agent, and is not completed
-                if (goal == this.mainState.agent && (mainState.row != row && mainState.col != col)) {
+                if (goal == this.mainState.agent && !(mainState.row == row && mainState.col == col)) {
+
                     return new SubGoal(row, col, goal, SubGoalType.GET_TO_COORDINATE, goalBoxes);
                 }
             }

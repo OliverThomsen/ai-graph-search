@@ -413,8 +413,7 @@ public class State implements SuperState
             Conflict conflict = conflictingAgent(agent, action);
             if (conflict != null) {
                 conflictingAgents.put(agent,conflict);
-                conflictingAgents.put(conflict.getConflictAgent(),new Conflict(agent,conflict.getCoordinatesOfConflict()[0],
-                        conflict.getCoordinatesOfConflict()[1],false,conflict.getConflictChar()));
+
             }
         }
 
