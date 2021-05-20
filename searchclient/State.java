@@ -478,25 +478,25 @@ public class State implements SuperState
 
         Map<Integer, Conflict> conflictingAgents = new HashMap<>();
 
-        for (int a1 = 0; a1 < highestAgentNumber; ++a1)
-        {
-            while (!agentRows.containsKey(a1)) a1++;
+        for (Map.Entry<Integer, Integer> entry : this.agentRows.entrySet()) {
+            int a1 = entry.getKey();
 
             if (jointAction.get(a1) == Action.NoOp)
             {
                 continue;
             }
 
-            for (int a2 = a1 + 1; a2 < highestAgentNumber; ++a2)
-            {
-                while (!agentRows.containsKey(a2)) a2++;
+            for (Map.Entry<Integer, Integer> entry2 : this.agentRows.entrySet()) {
+                int a2 = entry2.getKey();
+                if (entry2.getKey() == entry.getKey()){
+                    continue;
+                }
 
                 if (jointAction.get(a2) == Action.NoOp)
                 {
                     continue;
                 }
 
-                // Agents moving into same cell
                 if (agentRows.get(a1).equals(agentRows.get(a2)) && agentCols.get(a1).equals(agentCols.get(a2)))
                 {
                     Conflict conflict = new Conflict(a2,agentRows.get(a2),agentCols.get(a2),false,(char) (a2+'0'));
@@ -530,9 +530,64 @@ public class State implements SuperState
                     conflictingAgents.put(a1,conflict2);
                 }
 
-
             }
         }
+
+//        for (int a1 = 0; a1 < highestAgentNumber; ++a1)
+//        {
+//            while (!agentRows.containsKey(a1)) a1++;
+//
+//            if (jointAction.get(a1) == Action.NoOp)
+//            {
+//                continue;
+//            }
+//
+//            for (int a2 = a1 + 1; a2 < highestAgentNumber; ++a2)
+//            {
+//                while (!agentRows.containsKey(a2)) a2++;
+//
+//                if (jointAction.get(a2) == Action.NoOp)
+//                {
+//                    continue;
+//                }
+//
+//                // Agents moving into same cell
+//                if (agentRows.get(a1).equals(agentRows.get(a2)) && agentCols.get(a1).equals(agentCols.get(a2)))
+//                {
+//                    Conflict conflict = new Conflict(a2,agentRows.get(a2),agentCols.get(a2),false,(char) (a2+'0'));
+//                    conflictingAgents.put(a1,conflict);
+//                    Conflict conflict2 = new Conflict(a1,agentRows.get(a1),agentCols.get(a1),false,(char) (a1+'0'));
+//                    conflictingAgents.put(a2,conflict2);
+//                }
+//
+//                // Boxes moving into same cell
+//                if (       (boxRows.get(a1).equals(boxRows.get(a2)) && boxRows.get(a1) != -1)
+//                        && (boxCols.get(a1).equals(boxCols.get(a2)) && boxCols.get(a1) != -1) ) {
+//                    Conflict conflict = new Conflict(a2,boxRows.get(a2),boxCols.get(a2),false,boxes[boxRows.get(a2)][boxCols.get(a2)]);
+//                    conflictingAgents.put(a1,conflict);
+//                    Conflict conflict2 = new Conflict(a1,boxRows.get(a1),boxCols.get(a1),false,boxes[boxRows.get(a1)][boxCols.get(a1)]);
+//                    conflictingAgents.put(a2,conflict2);
+//                }
+//
+//                // Agent 1 and Box 2 moving into same cell
+//                if (agentRows.get(a1).equals(boxRows.get(a2)) && agentCols.get(a1).equals(boxCols.get(a2))) {
+//                    Conflict conflict = new Conflict(a2,boxRows.get(a2),boxCols.get(a2),false,boxes[boxRows.get(a2)][boxCols.get(a2)]);
+//                    conflictingAgents.put(a1,conflict);
+//                    Conflict conflict2 = new Conflict(a1,agentRows.get(a1),agentCols.get(a1),false,(char) (a1+'0'));
+//                    conflictingAgents.put(a2,conflict2);
+//                }
+//
+//                // Box 1 and Agent 2 moving into same cell
+//                if (boxRows.get(a1).equals(agentRows.get(a2)) && boxCols.get(a1).equals(agentCols.get(a2))) {
+//                    Conflict conflict = new Conflict(a1,boxRows.get(a1),boxCols.get(a1),false,boxes[boxRows.get(a1)][boxCols.get(a1)]);
+//                    conflictingAgents.put(a2,conflict);
+//                    Conflict conflict2 = new Conflict(a2,agentRows.get(a2),agentCols.get(a2),false,(char) (a2+'0'));
+//                    conflictingAgents.put(a1,conflict2);
+//                }
+//
+//
+//            }
+//        }
 
         return conflictingAgents;
     }

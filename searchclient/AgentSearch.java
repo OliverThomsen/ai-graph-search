@@ -65,21 +65,35 @@ public class AgentSearch {
                 boxNextToRow = boxRow;
                 boxNextToCol = boxCol;
             }
-        }
-        if (boxNextTo != 0) {
-            for (int row = 0; row < mainState.goals.length; row++) {
-                for (int col = 0; col < mainState.goals[0].length; col++) {
-                    char goal = mainState.goals[row][col];
-                    // if goal belongs to box
-                    if (goal == boxNextTo) {
-                        // if not already on goals
-                        if (!(row == boxNextToRow && col == boxNextToCol)) {
-                            return new SubGoal(row, col, boxNextTo, SubGoalType.PUSH_BOX_TO_GOAL, goalBoxes);
+            if (boxNextTo != 0) {
+                for (int row = 0; row < mainState.goals.length; row++) {
+                    for (int col = 0; col < mainState.goals[0].length; col++) {
+                        char goal = mainState.goals[row][col];
+                        // if goal belongs to box
+                        if (goal == boxNextTo) {
+                            // if not already on goals
+                            if (!(row == boxNextToRow && col == boxNextToCol)) {
+                                return new SubGoal(row, col, boxNextTo, SubGoalType.PUSH_BOX_TO_GOAL, goalBoxes);
+                            }
                         }
                     }
                 }
             }
         }
+//        if (boxNextTo != 0) {
+//            for (int row = 0; row < mainState.goals.length; row++) {
+//                for (int col = 0; col < mainState.goals[0].length; col++) {
+//                    char goal = mainState.goals[row][col];
+//                    // if goal belongs to box
+//                    if (goal == boxNextTo) {
+//                        // if not already on goals
+//                        if (!(row == boxNextToRow && col == boxNextToCol)) {
+//                            return new SubGoal(row, col, boxNextTo, SubGoalType.PUSH_BOX_TO_GOAL, goalBoxes);
+//                        }
+//                    }
+//                }
+//            }
+//        }
 
         // Else find box not on goal
         for (int row = 0; row < mainState.boxes.length; row++) {
