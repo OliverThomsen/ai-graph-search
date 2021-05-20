@@ -14,7 +14,7 @@ public class SearchClient {
     static AgentSearch[] agentSearches;
     static HashMap<Integer, SubGoal> subGoals;
 
-    static Map<Integer,Conflict> recentConflicts = new HashMap<>();
+    //static Map<Integer,Conflict> recentConflicts = new HashMap<>();
 
     public static void main(String[] args) throws IOException {
         System.out.println("MOLILAK");
@@ -92,7 +92,7 @@ public class SearchClient {
                     // Last agent has finish executing their plan
                     if (step >= longestPlan) {
                         saveRemainingPlans(step);
-                        recentConflicts.clear();
+                        //recentConflicts.clear();
                         return;
                     }
                     else continue;
@@ -101,7 +101,7 @@ public class SearchClient {
                 // Agent has no more moves
                 if (agentPlans.get(agent).size() == step) {
                     saveRemainingPlans(step); // saves the remaining plans for the other agents
-                    recentConflicts.clear();
+                    //recentConflicts.clear();
                     return;
                 }
 
@@ -123,7 +123,7 @@ public class SearchClient {
 
 
             if (conflictingAgentNumbers.size() >= 1) {
-                conflictingAgents.putAll(recentConflicts);
+                //conflictingAgents.putAll(recentConflicts);
                 jointAction.forEach((key, val) -> System.err.print(key +": "+ val+", "));
                 System.err.println("");
                 System.err.print("conflicting agents: " );
@@ -149,7 +149,7 @@ public class SearchClient {
                 }
                 State conflictState = putAgentsIntoSameState(conflictingStates);
                 solveConflictingState(conflictState, conflictingAgents);
-                recentConflicts.putAll(conflictingAgents);
+                //recentConflicts.putAll(conflictingAgents);
                 return;
             }
 
@@ -181,7 +181,9 @@ public class SearchClient {
                 ,co.getConflictChar(),SubGoalType.MOVE_BOX_TO_HELP,agentSearches[co.getConflictAgent()].getGoalboxes());
                 subGoals.put(co.getConflictAgent(),subGoal);
             }
-            if (entry.getValue().isStationary() && entry.getValue().getConflictChar() >= '0' && entry.getValue().getConflictChar() <= '9'){
+            if (entry.getValue().isStationary() && entry.getValue().getConflictChar() >= '0' && entry.getValue().getConflictChar() <= '9' &&
+                    (subGoals.get(entry.getValue().getConflictAgent()).type == SubGoalType.DONE ||
+                            subGoals.get(entry.getValue().getConflictAgent()).type == SubGoalType.GET_TO_COORDINATE) ){
                 co = entry.getValue();
                 SubGoal subGoal = new SubGoal(co.getCoordinatesOfConflict()[0],co.getCoordinatesOfConflict()[1]
                         ,co.getConflictChar(),SubGoalType.MOVE_OUT_OF_THE_WAY,agentSearches[co.getConflictAgent()].getGoalboxes());
