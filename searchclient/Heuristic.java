@@ -22,6 +22,9 @@ public abstract class Heuristic implements Comparator<SuperState> {
             AgentState state = (AgentState) s;
             SubGoal subGoal = this.subGoals.get(state.agent - '0');
             cost += calculator.goalBoxes(state.boxes, state.goals, subGoal.goalBoxes, state.agent-'0');
+//            if (subGoal.obstruction) {
+//                cost += calculator.obstructionPenalty(state.row, state.col, subGoal.row, subGoal.col, state.agent-'0');
+//            }
 
             switch (subGoal.type) {
                 case GET_TO_BOX:

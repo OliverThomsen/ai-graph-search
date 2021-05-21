@@ -55,7 +55,9 @@ public class CostCalculator {
         // find box goal
         int goalRow1 = findBox(goals, box)[0];
         int goalCol1 = findBox(goals, box)[1];
-        cost += distanceBetween(boxRow, boxCol, goalRow1, goalCol1, agent);
+        if (goalRow1!=0) {
+            cost += distanceBetween(boxRow, boxCol, goalRow1, goalCol1, agent);
+        }
         //penalize box for obstructing
         cost += (20-distanceBetween(boxRow, boxCol, goalRow, goalCol, agent));
         return cost;
@@ -67,6 +69,13 @@ public class CostCalculator {
         cost += (20-distanceBetween(agentRow, agentCol, goalRow, goalCol, agent));
         return cost;
     }
+
+//    public int obstructionPenalty(int agentRow, int agentCol, int goalRow, int goalCol, int agent){
+//        int cost = 0;
+//        //penalize agent for keeping still
+//        cost += (2-distanceBetween(agentRow, agentCol, goalRow, goalCol, agent));
+//        return cost;
+//    }
 
     public int distanceBetween(int startRow, int startCol, int endRow, int endCol, int agent) {
         int referenceLength = Math.abs(referenceMaps.get(agent)[startRow][startCol] - referenceMaps.get(agent)[endRow][endCol]);

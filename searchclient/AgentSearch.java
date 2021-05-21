@@ -3,6 +3,9 @@ package searchclient;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
+
+import static searchclient.SearchClient.subGoals;
 
 public class AgentSearch {
     public AgentState mainState;
@@ -19,7 +22,6 @@ public class AgentSearch {
         Map<Integer, Integer[][]> referenceMaps = new HashMap<>(1);
         referenceMaps.put(mainState.agent - '0', referenceMap);
 
-        System.err.println();
         Frontier frontier = new FrontierBestFirst(new HeuristicGreedy(referenceMaps, subGoal));
         mainState = (AgentState) GraphSearch.search(mainState, frontier);
         assert mainState != null;
@@ -54,17 +56,22 @@ public class AgentSearch {
         char boxNextTo = 0;
         int boxNextToRow = -1;
         int boxNextToCol = -1;
+        char nextBox = 0;
+        int boxNextToRow1 = -1;
+        int boxNextToCol1 = -1;
+        Boolean nextGoal = false;
 
         int[][] coordinates = new int[][]{{-1,0},{1,0},{0,-1},{0,1}};
         for (int[] c : coordinates) {
-            int boxRow = mainState.row+c[0];
-            int boxCol = mainState.col+c[1];
+            int boxRow = mainState.row + c[0];
+            int boxCol = mainState.col + c[1];
             char box = mainState.boxes[boxRow][boxCol];
             if (SearchClient.isBox(box)) {
                 boxNextTo = box;
                 boxNextToRow = boxRow;
                 boxNextToCol = boxCol;
             }
+
             if (boxNextTo != 0) {
                 for (int row = 0; row < mainState.goals.length; row++) {
                     for (int col = 0; col < mainState.goals[0].length; col++) {
@@ -80,6 +87,7 @@ public class AgentSearch {
                 }
             }
         }
+
 //        if (boxNextTo != 0) {
 //            for (int row = 0; row < mainState.goals.length; row++) {
 //                for (int col = 0; col < mainState.goals[0].length; col++) {
@@ -95,15 +103,25 @@ public class AgentSearch {
 //            }
 //        }
 
-        // Else find box not on goal
-        for (int row = 0; row < mainState.boxes.length; row++) {
-            for (int col = 0; col < mainState.boxes[0].length; col++) {
+
+
+
+        // Else find box not on goal (with start at agent, if agentRow = mainState.row and agentCol = mainState.col)
+        int agentRow = 0; //(int) mainState.row-mainState.row/2;
+        int agentCol = 0; //(int) mainState.col-mainState.col/2;
+        for (int i = 0; i < mainState.boxes.length; i++) {
+            int row = (agentRow+i)%(mainState.boxes.length);
+            for (int n = 0; n < mainState.boxes[0].length; n++) {
+                int col = (agentCol+n)%(mainState.boxes[0].length);
                 char lonelyBox = mainState.boxes[row][col];
-                if (SearchClient.isBox(lonelyBox) && mainState.goals[row][col] != lonelyBox) {
-                    return new SubGoal(row, col, lonelyBox, SubGoalType.GET_TO_BOX, goalBoxes);
+                if (CostCalculator.findBox(mainState.goals, lonelyBox)[0]!=0) {
+                    if (SearchClient.isBox(lonelyBox) && mainState.goals[row][col] != lonelyBox) {
+                        return new SubGoal(row, col, lonelyBox, SubGoalType.GET_TO_BOX, goalBoxes);
+                    }
                 }
             }
         }
+
 
         // Else find agent goal
         for (int row = 0; row < mainState.goals.length; row++) {
