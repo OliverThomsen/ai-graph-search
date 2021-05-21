@@ -14,6 +14,7 @@ public class GraphSearch {
         HashSet<SuperState> explored = new HashSet<>();
 
         while (true) {
+            System.err.println("i am still doing something");
             // if the frontier is empty then return failure
             if (frontier.isEmpty()) {
                 return null;

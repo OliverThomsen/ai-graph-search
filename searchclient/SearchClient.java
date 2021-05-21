@@ -66,33 +66,32 @@ public class SearchClient {
 
         for (int agent = 0; agent < agentSearches.length ; agent++ ) {
             // If agent already has a plan then skip agent
+
             if (agentPlans.get(agent).size() != 0) {
+                System.err.println("i still have plan: " +agent);
                 continue;
             }
 
             SubGoal subGoal = agentSearches[agent].getNextSubGoal();
 
             //If agent is has subGoal done do not get new sub plan
-            if (subGoal.type==SubGoalType.DONE) {
-                continue;
-            }
 
             // if last subGoal was get to box, push that box to its goal
-            if (subGoals.get(agentSearches[agent].mainState.agent-'0')!=null) {
-                System.err.println(subGoals.get(agentSearches[agent].mainState.agent-'0').type.equals(SubGoalType.GET_TO_BOX));
-                if (subGoals.get(agentSearches[agent].mainState.agent-'0').type.equals(SubGoalType.GET_TO_BOX)) {
-                    char box = subGoals.get(agent).character;
-                    int boxRow = subGoals.get(agent).row;
-                    int boxCol = subGoals.get(agent).col;
-                    // find box goal
-                    int goalRow = CostCalculator.findBox(agentSearches[agent].mainState.goals, box)[0];
-                    int goalCol = CostCalculator.findBox(agentSearches[agent].mainState.goals, box)[1];
-                    if (!(boxRow==goalRow && boxCol==goalCol)) {
-                        subGoal = new SubGoal(goalRow, goalCol, box, SubGoalType.PUSH_BOX_TO_GOAL, subGoal.goalBoxes);
-                    }
-
-                }
-            }
+//            if (subGoals.get(agentSearches[agent].mainState.agent-'0')!=null) {
+//                System.err.println(subGoals.get(agentSearches[agent].mainState.agent-'0').type.equals(SubGoalType.GET_TO_BOX));
+//                if (subGoals.get(agentSearches[agent].mainState.agent-'0').type.equals(SubGoalType.GET_TO_BOX)) {
+//                    char box = subGoals.get(agent).character;
+//                    int boxRow = subGoals.get(agent).row;
+//                    int boxCol = subGoals.get(agent).col;
+//                    // find box goal
+//                    int goalRow = CostCalculator.findBox(agentSearches[agent].mainState.goals, box)[0];
+//                    int goalCol = CostCalculator.findBox(agentSearches[agent].mainState.goals, box)[1];
+//                    if (!(boxRow==goalRow && boxCol==goalCol)) {
+//                        subGoal = new SubGoal(goalRow, goalCol, box, SubGoalType.PUSH_BOX_TO_GOAL, subGoal.goalBoxes);
+//                    }
+//
+//                }
+//            }
 
 
 
@@ -117,6 +116,7 @@ public class SearchClient {
 
         while (true) {
             // Find the longest agent plan
+            System.err.println(" i reached here line 124");
             for (ArrayList<Action> plan : agentPlans) {
                 longestPlan = Math.max(longestPlan, plan.size());
             }
@@ -127,11 +127,13 @@ public class SearchClient {
 
                 // Agent is in goal state and has no more moves
                 if (agentSearches[agent].mainState.isGoalState() && agentPlans.get(agent).size() == 0) {
+                    System.err.println(" i reached here line 130" + agent);
                     jointAction.put(agent, Action.NoOp);
                     // Last agent has finish executing their plan
                     if (step >= longestPlan) {
                         saveRemainingPlans(step);
                         //recentConflicts.clear();
+                        System.err.println(" i reached here line 140");
                         return;
                     }
                     else continue;
@@ -139,12 +141,22 @@ public class SearchClient {
 
                 // Agent has no more moves
                 if (agentPlans.get(agent).size() == step) {
-                    saveRemainingPlans(step); // saves the remaining plans for the other agents
+                    // saves the remaining plans for the other agents
                     //recentConflicts.clear();
-                    return;
-                }
+                    if (subGoals.get(agent).type == SubGoalType.DONE){
+                        Action[] plan = new Action[step+1];
+                        plan[step] = Action.NoOp;
+                        System.err.println(" i reached here line 151 and i am agent "+ agent);
+                        agentPlans.set(agent, new ArrayList<>(Arrays.asList(plan)));
+                        agentSearches[agent].applyAction(Action.NoOp);
 
-                jointAction.put(agent, agentPlans.get(agent).get(step));
+                    }else{
+                        System.err.println(" i reached here line 154 and i am agent "+ agent);
+                        saveRemainingPlans(step);
+                        return;
+                    }
+                }
+                    jointAction.put(agent, agentPlans.get(agent).get(step));
             }
 
             // Check if joint action is conflicting in original state
