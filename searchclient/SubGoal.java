@@ -28,6 +28,14 @@ public class SubGoal {
                         && Math.abs(agentState.col - col) == 1);
             case PUSH_BOX_TO_GOAL:
                 return agentState.boxes[row][col] == character;
+
+            case MOVE_BOX_TO_HELP:
+                int endRow = CostCalculator.findBox(agentState.boxes, character)[0];
+                int endCol = CostCalculator.findBox(agentState.boxes, character)[1];
+                int rowDiff = Math.abs(row - endRow);
+                int colDiff = Math.abs(col - endCol);
+                int manHLength = rowDiff + colDiff;
+                return (manHLength>3);
             case GET_TO_COORDINATE:
             case DONE:
                 return agentState.col == col && agentState.row == row;
@@ -60,6 +68,14 @@ public class SubGoal {
                     break;
                 case GET_TO_COORDINATE:
                     completed = agentCol == subGoal.col && agentRow == subGoal.row;
+                    break;
+                case MOVE_BOX_TO_HELP:
+                    int endRow = CostCalculator.findBox(state.boxes, subGoal.character)[0];
+                    int endCol = CostCalculator.findBox(state.boxes, subGoal.character)[1];
+                    int rowDiff = Math.abs(subGoal.row - endRow);
+                    int colDiff = Math.abs(subGoal.col - endCol);
+                    int manHLength = rowDiff + colDiff;
+                    completed = (manHLength>3);
                     break;
             }
             if (completed) break;
