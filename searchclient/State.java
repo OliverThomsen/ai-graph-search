@@ -596,25 +596,11 @@ public class State implements SuperState
     private int getBoxOwner(char box) {
         int owner = -1;
         Color agentColor = this.boxColors.get(box);
-        System.err.println(" line 598 the conflict box is "+ box);
-        if (agentBoxes == null){
-            System.err.println("problem");
-        }
-        for (Map.Entry<Integer,Color> entry : this.agentColors.entrySet()) {
-            int agent = entry.getKey();
-            Color color = entry.getValue();
-            System.err.println("");
-            if (agentColor.equals(color)) {
-                if (agentBoxes != null){
-                    System.err.println("the conflict box is "+ box);
-                    for (Map.Entry<Integer,ArrayList<Character>> listEntry: agentBoxes.entrySet()) {
-                        if (listEntry.getValue().contains(box)){
-                            System.err.println("Ih have box: "+ box + " I am agent: " + listEntry.getKey());
-                            owner = listEntry.getKey();
-                        }
-                    }
-                }else
-                owner = agent;
+
+        for (Map.Entry<Integer,ArrayList<Character>> listEntry: agentBoxes.entrySet()) {
+            if (listEntry.getValue().contains(box)){
+                System.err.println("Ih have box: "+ box + " I am agent: " + listEntry.getKey());
+                owner = listEntry.getKey();
             }
         }
         return owner;

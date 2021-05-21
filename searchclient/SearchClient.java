@@ -30,30 +30,25 @@ public class SearchClient {
 
         agentPlans = new ArrayList<>(numAgents);
         agentSearches = new AgentSearch[numAgents];
-        Set<Integer> agentList = new HashSet<>();
+        Set<Integer> agentList;
         Map<Color,Set<Integer>> agentsOfSameColor = new HashMap<>();
 
-        for (int a=0 ; a < numAgents ; a++) {
-            for (int a1 = a + 1; a1 < numAgents; a1++) {
-                if (originalState.agentColors.get(a) == originalState.agentColors.get(a1)) {
+
+        for (Color color: Color.values()) {
+            agentList = new HashSet<>();
+            for (int a = 0; a < numAgents; a++) {
+                if (originalState.agentColors.get(a) == color) {
                     agentList.add(a);
-                    agentList.add(a1);
-                    agentsOfSameColor.put(originalState.agentColors.get(a),agentList);
+                    agentsOfSameColor.put(color, agentList);
                 }
+
             }
         }
-
-
-        if (agentsOfSameColor.size() > 0){
-            agentStatesOfSameColor = extractAgentStateOfSameColor(originalState,agentsOfSameColor);
-        }
+        agentStatesOfSameColor = extractAgentStateOfSameColor(originalState,agentsOfSameColor);
 
 
         for (int a=0 ; a < numAgents ; a++) {
-            AgentState agentState = extractAgentState(originalState, a);
-            if (agentStatesOfSameColor.containsKey(a)){
-                agentState = agentStatesOfSameColor.get(a);
-            }
+            AgentState agentState = agentStatesOfSameColor.get(a);
             System.err.println(agentState.toString());
             agentPlans.add(new ArrayList<>(0));
             agentSearches[a] = new AgentSearch(agentState);
@@ -76,9 +71,9 @@ public class SearchClient {
             }
 
             // If agent is in final goal state do not get new sub plan
-//            if (agentSearches[agent].mainState.isGoalState()) {
-//                subGoal subgoal = agentSearches[agent].getNextSubGoal();
-//            }else
+            if (agentSearches[agent].mainState.isGoalState()) {
+                subGoal subgoal = agentSearches[agent].getNextSubGoal();
+            }else
 
             SubGoal subGoal = agentSearches[agent].getNextSubGoal();
             System.err.println("Sub Goal: " + subGoal);
@@ -279,10 +274,7 @@ public class SearchClient {
             }
         }
         State state = new State(agentRows, agentCols, agentColors, walls, boxes, boxColors, goals);
-        if (agentBoxes != null) {
-            System.err.println("this is good");
-            state.setAgentBoxes(agentBoxes);
-        }
+        state.setAgentBoxes(agentBoxes);
         return state;
     }
 
@@ -348,7 +340,6 @@ public class SearchClient {
 
     static Map<Integer, AgentState> extractAgentStateOfSameColor(State state, Map<Color,Set<Integer>> agentsOfSameColor) {
         agentBoxes = new HashMap<>();
-        List<Character> boxes = new ArrayList<>();
         ArrayList<Character> agentsBoxes;
 
         for (Map.Entry<Color,Set<Integer>> entry: agentsOfSameColor.entrySet()) {
@@ -359,6 +350,13 @@ public class SearchClient {
 
         for (Map.Entry<Color,Set<Integer>> entry: agentsOfSameColor.entrySet())
         {
+            List<Character> boxes = new ArrayList<>();
+            int[] modulusConverter = new int[entry.getValue().size()];
+            int j = 0;
+            for (int agentIndex : entry.getValue()){
+                modulusConverter[j] = agentIndex;
+                j++;
+            }
             for (int row = 0; row < state.boxes.length; row++) {
                 for (int col = 0; col < state.boxes[0].length; col++) {
                     char box = state.boxes[row][col];
@@ -371,17 +369,19 @@ public class SearchClient {
 
                 }
             }
-            for (int i = 0; i < boxes.size(); i++) {
-                System.err.println("this is the char that needs to be given out: " +boxes.get(i));
-                int agent = i % entry.getValue().size();
-                System.err.println("this is the agent: " +i);
-                agentsBoxes = agentBoxes.get(agent);
-                for (char c: agentsBoxes) {
-                    System.err.println(c);
-                }
-                agentsBoxes.add(boxes.get(i));
-                agentBoxes.put(agent,agentsBoxes);
 
+            for (int i = 0; i < boxes.size(); i++) {
+                int agent = i % entry.getValue().size();
+                agentsBoxes = agentBoxes.get(modulusConverter[agent]);
+                agentsBoxes.add(boxes.get(i));
+                agentBoxes.put(modulusConverter[agent],agentsBoxes);
+                System.err.println( agent + " " + modulusConverter[agent] + " " + boxes.get(i));
+            }
+        }
+        for (Map.Entry<Integer,ArrayList<Character>> entry: agentBoxes.entrySet() ){
+            System.err.println("i am agent: "+ entry.getKey());
+            for (char c : entry.getValue()){
+                System.err.print(c);
             }
         }
         Map<Integer,AgentState> agentStates = new HashMap<Integer, AgentState>();

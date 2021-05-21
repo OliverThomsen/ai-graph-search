@@ -76,7 +76,7 @@ public class CostCalculator {
         return Math.max(referenceLength, manHLength);
     }
 
-    public int[] findBox(char[][] boxes, char box){
+    public static int[] findBox(char[][] boxes, char box){
         // find box
         int[] boxCor = new int[2];
         int boxRow = 0;
