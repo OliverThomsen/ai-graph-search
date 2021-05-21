@@ -290,7 +290,7 @@ public class State implements SuperState
                     boolean sameColor = this.boxColors.get(box) == agentColor;
                     destRowBox = destRowAgent + action.boxRowDelta;
                     destColBox = destColAgent + action.boxColDelta;
-                    return this.cellIsFree(destRowBox, destColBox) && sameColor;
+                    return this.cellIsFree(destRowBox, destColBox) && sameColor && agentBoxes.get(agent).contains(box);
                 }
                 return false;
 
@@ -304,7 +304,7 @@ public class State implements SuperState
                     boolean sameColor = this.boxColors.get(box) == agentColor;
                     destRowAgent = agentRow + action.agentRowDelta;
                     destColAgent = agentCol + action.agentColDelta;
-                    return this.cellIsFree(destRowAgent, destColAgent) && sameColor;
+                    return this.cellIsFree(destRowAgent, destColAgent) && sameColor && agentBoxes.get(agent).contains(box);
                 }
                 return false;
         }

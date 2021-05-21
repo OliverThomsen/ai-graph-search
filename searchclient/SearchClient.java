@@ -168,6 +168,9 @@ public class SearchClient {
                     agentSearches[agentNumber].rollBackState(agentPlans.get(agentNumber).size());
                     // delete remaining plan after the conflict
                     agentPlans.get(agentNumber).clear();
+
+                    System.err.println("now the conflicting agents own states");
+                    System.err.println(agentSearches[agentNumber].mainState);
                     conflictingStates[i] = agentSearches[agentNumber].mainState;
                     i++;
                 }
