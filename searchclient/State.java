@@ -13,6 +13,7 @@ public class State implements SuperState
     public Map<Integer,Integer> agentRows;
     public Map<Integer,Integer> agentCols;
     public Map<Integer,Color> agentColors;
+    public Map<Integer, ArrayList<Character>> agentBoxes;
 
     /*
         The walls, boxes, and goals arrays are indexed from the top-left of the level, row-major order (row, col).
@@ -88,6 +89,7 @@ public class State implements SuperState
     public State(State parent, Map<Integer, Action> jointAction)
     {
         // Copy parent
+        this.agentBoxes = parent.agentBoxes;
         this.boxColors = new HashMap<>(parent.boxColors);
         this.agentColors = new HashMap<>(parent.agentColors);
         this.agentRows = new HashMap<>(parent.agentRows);
@@ -594,10 +596,24 @@ public class State implements SuperState
     private int getBoxOwner(char box) {
         int owner = -1;
         Color agentColor = this.boxColors.get(box);
+        System.err.println(" line 598 the conflict box is "+ box);
+        if (agentBoxes == null){
+            System.err.println("problem");
+        }
         for (Map.Entry<Integer,Color> entry : this.agentColors.entrySet()) {
             int agent = entry.getKey();
             Color color = entry.getValue();
+            System.err.println("");
             if (agentColor.equals(color)) {
+                if (agentBoxes != null){
+                    System.err.println("the conflict box is "+ box);
+                    for (Map.Entry<Integer,ArrayList<Character>> listEntry: agentBoxes.entrySet()) {
+                        if (listEntry.getValue().contains(box)){
+                            System.err.println("Ih have box: "+ box + " I am agent: " + listEntry.getKey());
+                            owner = listEntry.getKey();
+                        }
+                    }
+                }else
                 owner = agent;
             }
         }
@@ -716,5 +732,9 @@ public class State implements SuperState
             s.append("\n");
         }
         return s.toString();
+    }
+
+    public void setAgentBoxes(Map<Integer, ArrayList<Character>> agentBoxes) {
+        this.agentBoxes = agentBoxes;
     }
 }

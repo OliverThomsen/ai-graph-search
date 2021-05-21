@@ -13,6 +13,7 @@ public class SearchClient {
     static BufferedReader serverMessages;
     static AgentSearch[] agentSearches;
     static HashMap<Integer, SubGoal> subGoals;
+    static Map<Integer, ArrayList<Character>> agentBoxes;
 
     //static Map<Integer,Conflict> recentConflicts = new HashMap<>();
 
@@ -22,16 +23,39 @@ public class SearchClient {
         // Parse level
         serverMessages = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.US_ASCII));
         originalState = Parser.parseLevel(serverMessages);
+        Map<Integer,AgentState> agentStatesOfSameColor = new HashMap<>();
 
         int numAgents = originalState.agentRows.size();
         subGoals = new HashMap<>(numAgents);
 
         agentPlans = new ArrayList<>(numAgents);
         agentSearches = new AgentSearch[numAgents];
+        Set<Integer> agentList = new HashSet<>();
+        Map<Color,Set<Integer>> agentsOfSameColor = new HashMap<>();
 
         for (int a=0 ; a < numAgents ; a++) {
-            agentPlans.add(new ArrayList<>(0));
+            for (int a1 = a + 1; a1 < numAgents; a1++) {
+                if (originalState.agentColors.get(a) == originalState.agentColors.get(a1)) {
+                    agentList.add(a);
+                    agentList.add(a1);
+                    agentsOfSameColor.put(originalState.agentColors.get(a),agentList);
+                }
+            }
+        }
+
+
+        if (agentsOfSameColor.size() > 0){
+            agentStatesOfSameColor = extractAgentStateOfSameColor(originalState,agentsOfSameColor);
+        }
+
+
+        for (int a=0 ; a < numAgents ; a++) {
             AgentState agentState = extractAgentState(originalState, a);
+            if (agentStatesOfSameColor.containsKey(a)){
+                agentState = agentStatesOfSameColor.get(a);
+            }
+            System.err.println(agentState.toString());
+            agentPlans.add(new ArrayList<>(0));
             agentSearches[a] = new AgentSearch(agentState);
         }
 
@@ -52,9 +76,9 @@ public class SearchClient {
             }
 
             // If agent is in final goal state do not get new sub plan
-            if (agentSearches[agent].mainState.isGoalState()) {
-                continue;
-            }
+//            if (agentSearches[agent].mainState.isGoalState()) {
+//                subGoal subgoal = agentSearches[agent].getNextSubGoal();
+//            }else
 
             SubGoal subGoal = agentSearches[agent].getNextSubGoal();
             System.err.println("Sub Goal: " + subGoal);
@@ -251,8 +275,12 @@ public class SearchClient {
                 }
             }
         }
-
-        return new State(agentRows, agentCols, agentColors, walls, boxes, boxColors, goals);
+        State state = new State(agentRows, agentCols, agentColors, walls, boxes, boxColors, goals);
+        if (agentBoxes != null) {
+            System.err.println("this is good");
+            state.setAgentBoxes(agentBoxes);
+        }
+        return state;
     }
 
 
@@ -314,6 +342,89 @@ public class SearchClient {
 
         return new AgentState(agentRow, agentCol, color, Character.forDigit(agent, 10), walls, boxes, goals);
     }
+
+    static Map<Integer, AgentState> extractAgentStateOfSameColor(State state, Map<Color,Set<Integer>> agentsOfSameColor) {
+        agentBoxes = new HashMap<>();
+        List<Character> boxes = new ArrayList<>();
+        ArrayList<Character> agentsBoxes;
+
+        for (Map.Entry<Color,Set<Integer>> entry: agentsOfSameColor.entrySet()) {
+            for (Integer agent: entry.getValue()){
+                agentBoxes.put(agent,new ArrayList<>());
+            }
+        }
+
+        for (Map.Entry<Color,Set<Integer>> entry: agentsOfSameColor.entrySet())
+        {
+            for (int row = 0; row < state.boxes.length; row++) {
+                for (int col = 0; col < state.boxes[0].length; col++) {
+                    char box = state.boxes[row][col];
+                    if (isBox(box)) {
+                        // Box belongs to agent - keep
+                        if (state.boxColors.get(box) == entry.getKey()) {
+                            boxes.add(box);
+                        }
+                    }
+
+                }
+            }
+            for (int i = 0; i < boxes.size(); i++) {
+                System.err.println("this is the char that needs to be given out: " +boxes.get(i));
+                int agent = i % entry.getValue().size();
+                System.err.println("this is the agent: " +i);
+                agentsBoxes = agentBoxes.get(agent);
+                for (char c: agentsBoxes) {
+                    System.err.println(c);
+                }
+                agentsBoxes.add(boxes.get(i));
+                agentBoxes.put(agent,agentsBoxes);
+
+            }
+        }
+        Map<Integer,AgentState> agentStates = new HashMap<Integer, AgentState>();
+        for (Map.Entry<Integer, ArrayList<Character>> agent: agentBoxes.entrySet()) {
+            AgentState agentState = extractAgentState2(originalState,agent.getKey(),agent.getValue());
+            agentStates.put(agent.getKey(),agentState);
+
+        }
+
+        originalState.setAgentBoxes(agentBoxes);
+        return agentStates;
+
+    }
+
+    static AgentState extractAgentState2(State state, int agent, ArrayList<Character> agentboxes) {
+        int agentRow = state.agentRows.get(agent);
+        int agentCol = state.agentCols.get(agent);
+        Color color = state.agentColors.get(agent);
+        char[][] boxes = new char[state.boxes.length][state.boxes[0].length];
+        char[][] goals = new char[state.goals.length][state.goals[0].length];
+        boolean[][] walls = state.walls;
+        // Loop through all cells to find agent boxes
+        for (int row = 0; row < state.boxes.length; row++) {
+            for (int col = 0; col < state.boxes[0].length; col++) {
+                char box = state.boxes[row][col];
+                if (isBox(box)) {
+                    // Box belongs to agent - keep
+                    if (state.boxColors.get(box) == color && agentboxes.contains(box)) {
+                        boxes[row][col] = box;
+                    }
+                }
+                char goal = state.goals[row][col];
+                if ((isBox(goal) && state.boxColors.get(goal) == color) || goal-'0' == agent) {
+                    goals[row][col] = goal;
+                }
+            }
+        }
+
+        return new AgentState(agentRow, agentCol, color, Character.forDigit(agent, 10), walls, boxes, goals);
+    }
+
+
+
+
+
+
 
 
     static boolean isBox(char c) {
