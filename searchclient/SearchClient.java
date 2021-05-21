@@ -75,12 +75,33 @@ public class SearchClient {
                 continue;
             }
 
-            // If agent is in final goal state do not get new sub plan
-//            if (agentSearches[agent].mainState.isGoalState()) {
-//                subGoal subgoal = agentSearches[agent].getNextSubGoal();
-//            }else
 
             SubGoal subGoal = agentSearches[agent].getNextSubGoal();
+
+            //If agent is has subGoal done do not get new sub plan
+            if (subGoal.type==SubGoalType.DONE) {
+                continue;
+            }
+
+            // if last subGoal was get to box, push that box to its goal
+            if (subGoals.get(agentSearches[agent].mainState.agent-'0')!=null) {
+                System.err.println(subGoals.get(agentSearches[agent].mainState.agent-'0').type.equals(SubGoalType.GET_TO_BOX));
+                if (subGoals.get(agentSearches[agent].mainState.agent-'0').type.equals(SubGoalType.GET_TO_BOX)) {
+                    char box = subGoals.get(agent).character;
+                    int boxRow = subGoals.get(agent).row;
+                    int boxCol = subGoals.get(agent).col;
+                    // find box goal
+                    int goalRow = CostCalculator.findBox(agentSearches[agent].mainState.goals, box)[0];
+                    int goalCol = CostCalculator.findBox(agentSearches[agent].mainState.goals, box)[1];
+                    if (!(boxRow==goalRow && boxCol==goalCol)) {
+                        subGoal = new SubGoal(goalRow, goalCol, box, SubGoalType.PUSH_BOX_TO_GOAL, subGoal.goalBoxes);
+                    }
+
+                }
+            }
+
+
+
             System.err.println("Sub Goal: " + subGoal);
             subGoals.put(agent,subGoal);
 
