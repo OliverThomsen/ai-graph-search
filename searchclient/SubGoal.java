@@ -35,7 +35,12 @@ public class SubGoal {
                 int rowDiff = Math.abs(row - endRow);
                 int colDiff = Math.abs(col - endCol);
                 int manHLength = rowDiff + colDiff;
-                return (manHLength>3);
+                return (manHLength>15);
+            case MOVE_OUT_OF_THE_WAY:
+                int rowDiff1 = Math.abs(row - agentState.row);
+                int colDiff1 = Math.abs(col - agentState.col);
+                int manHLength1 = rowDiff1 + colDiff1;
+                return (manHLength1>15);
             case GET_TO_COORDINATE:
             case DONE:
                 return agentState.col == col && agentState.row == row;
@@ -75,8 +80,13 @@ public class SubGoal {
                     int rowDiff = Math.abs(subGoal.row - endRow);
                     int colDiff = Math.abs(subGoal.col - endCol);
                     int manHLength = rowDiff + colDiff;
-                    completed = (manHLength>3);
+                    completed = (manHLength>15);
                     break;
+                case MOVE_OUT_OF_THE_WAY:
+                    int rowDiff1 = Math.abs(subGoal.row - agentRow);
+                    int colDiff1 = Math.abs(subGoal.col - agentCol);
+                    int manHLength1 = rowDiff1 + colDiff1;
+                    completed = (manHLength1>15);
             }
             if (completed) break;
         }
